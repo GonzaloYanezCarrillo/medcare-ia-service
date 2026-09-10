@@ -1,0 +1,32 @@
+__pycache__/
+*.py[cod]
+*.so
+*.egg-info/
+.eggs/
+build/
+dist/
+
+# Entornos virtuales
+.venv/
+venv/
+env/
+ENV/
+
+# Entorno y secretos
+.env
+.env.*
+!.env.example
+
+# Modelos y datos (grandes, no versionar)
+models/*.joblib
+models/*.pkl
+data/
+*.parquet
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# Logs
+*.log

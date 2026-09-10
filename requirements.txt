@@ -1,0 +1,17 @@
+# MedCare IA — Dependencias de runtime
+# Stack definido en contracts/ia-api.yaml (owner Dev C)
+# Rangos flexibles: soportan Python 3.11 (prod/CI) y 3.14 (local).
+
+fastapi>=0.115.6,<1.0
+uvicorn[standard]>=0.34,<1.0
+pydantic>=2.11,<3.0
+pydantic-settings>=2.9,<3.0
+python-dotenv>=1.1,<2.0
+
+# ML / NLP (wheels disponibles para CPython 3.11 y 3.14)
+scikit-learn>=1.9,<2.0
+numpy>=2.2,<3.0
+joblib>=1.4,<2.0
+# spaCy y modelo de lenguaje se añaden en los sprints de NLP (C2-2+).
+# spacy>=3.8
+# descargar modelo: python -m spacy download es_core_news_sm

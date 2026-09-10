@@ -1,0 +1,15 @@
+services:
+  ia_service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ia_service
+    ports:
+      - "8000:8000"
+    environment:
+      - APP_ENV=development
+      - MODEL_PATH=models/model.joblib
+    volumes:
+      - ./app:/app/app
+      - ./models:/app/models
+    restart: unless-stopped
