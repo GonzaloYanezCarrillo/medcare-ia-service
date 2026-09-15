@@ -20,8 +20,14 @@ ENV/
 # Modelos y datos (grandes, no versionar)
 models/*.joblib
 models/*.pkl
-data/
+data/*
+!data/CHECKLIST.md
 *.parquet
+
+# Reportes de cobertura
+.coverage
+htmlcov/
+coverage.xml
 
 # IDE
 .vscode/

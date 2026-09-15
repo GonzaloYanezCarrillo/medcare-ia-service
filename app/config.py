@@ -30,6 +30,9 @@ class Settings(BaseSettings):
     model_path: str = "models/model.joblib"
     model_min_version: str = "0.1.0"
 
+    # Dataset Kaggle (C0-3 / C1-1)
+    dataset_path: str = "data/KaggleV2-May-2016.csv"
+
     # Integración con la API Core .NET (Sprint 2+)
     core_api_url: str | None = None
     core_token: str | None = None

@@ -12,6 +12,7 @@ python-dotenv>=1.1,<2.0
 scikit-learn>=1.9,<2.0
 numpy>=2.2,<3.0
 joblib>=1.4,<2.0
+pandas>=2.2,<3.0
 # spaCy y modelo de lenguaje se añaden en los sprints de NLP (C2-2+).
 # spacy>=3.8
 # descargar modelo: python -m spacy download es_core_news_sm
