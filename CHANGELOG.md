@@ -11,7 +11,7 @@ El servicio implementa el contrato [`ia-api.yaml`](https://github.com/pabloorden
 - **Modelo C1-2**: RandomForest re-tunado (`n_estimators=150`, `max_depth=12`, `class_weight="balanced"`).
 - **Métricas test (20%, estratificado):** AUC-ROC **0.7174** (vs 0.7049 C1-1), sensibilidad **0.7829** (vs 0.7188), especificidad 0.5490 (vs 0.5801). Mejora AUC y sensibilidad (prioridad de triaje) con leve pérdida de especificidad.
 - **Inferencia**: `Weekday` no está en el contrato `PredictRequest` → se rellena con el default de entrenamiento (mediana); sin cambios en `predict_service.py` (el mapeo biunívoco cubre los 6 campos del contrato).
-- Commit: pendiente (se registra al cierre).
+- Commit: `7de2cd7`.
 
 ## [0.3.0] — Sprint 1 · C1-1 (2026-09-15)
 
