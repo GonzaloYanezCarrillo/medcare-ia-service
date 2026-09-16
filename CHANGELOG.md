@@ -4,6 +4,15 @@ Todas las modificaciones de este repositorio se documentan aquí, siguiendo [Kee
 
 El servicio implementa el contrato [`ia-api.yaml`](https://github.com/pabloordenes/medcare-contracts) (owner: Dev C).
 
+## [0.3.1] — Sprint 1 · C1-2 (2026-09-16)
+
+### C1-2 — Feature engineering avanzada: día de la semana
+- **ETL** (`app/training/etl.py`): nueva feature derivada `Weekday` (0=Lunes...6=Domingo) desde `AppointmentDay`; añadida a `FEATURES` como numérica ordinal.
+- **Modelo C1-2**: RandomForest re-tunado (`n_estimators=150`, `max_depth=12`, `class_weight="balanced"`).
+- **Métricas test (20%, estratificado):** AUC-ROC **0.7174** (vs 0.7049 C1-1), sensibilidad **0.7829** (vs 0.7188), especificidad 0.5490 (vs 0.5801). Mejora AUC y sensibilidad (prioridad de triaje) con leve pérdida de especificidad.
+- **Inferencia**: `Weekday` no está en el contrato `PredictRequest` → se rellena con el default de entrenamiento (mediana); sin cambios en `predict_service.py` (el mapeo biunívoco cubre los 6 campos del contrato).
+- Commit: pendiente (se registra al cierre).
+
 ## [0.3.0] — Sprint 1 · C1-1 (2026-09-15)
 
 ### C1-1 — ETL + modelo base de no-show
@@ -64,7 +73,7 @@ El servicio implementa el contrato [`ia-api.yaml`](https://github.com/pabloorden
 
 | Sprint | Hitos |
 |--------|-------|
-| Sprint 1 | ~~**C1-1**~~ ETL + modelo base ✅ Delivered · **C1-2** Feature engineering avanzada (target encoding, día de semana) |
+| Sprint 1 | ~~**C1-1**~~ ✅ · ~~**C1-2**~~ Feature engineering avanzada (día de semana) ✅ Delivered |
 | Sprint 2 | **C2-1** `/predict` con modelo cargado en startup ✅ Parcial (startup ya carga) · **C2-2** NLP spaCy/NLTK real |
 | Sprint 3 | **C3-1** NLP producción + métricas · Integración `.NET` (`POST /integracion/ml/*`) |
 | Sprint 4 | **C4-1** Cron job batch 48h + auth M2M `service-ia` |

@@ -49,9 +49,13 @@ logger = logging.getLogger(__name__)
 CATEGORICAL_FILL = "desconocido"
 NUMERIC_FILL = 0.0
 
+# Modelo base C1-2: Weekday + RandomForest n=150, depth=12.
+# vs baseline C1-1 (120/15 sin Weekday) mejora AUC (0.7049→0.7174) y sensibilidad
+# (0.7188→0.7829) a costa de especificidad (0.5801→0.5490); para triaje de no-show
+# priorizamos sensibilidad (detectar no-shows reales).
 MODEL_KWARGS = {
-    "n_estimators": 120,
-    "max_depth": 15,
+    "n_estimators": 150,
+    "max_depth": 12,
     "class_weight": "balanced",
     "random_state": 42,
     "n_jobs": 1,

@@ -51,6 +51,9 @@ def clean(df: pd.DataFrame) -> pd.DataFrame:
     appointment = pd.to_datetime(df["AppointmentDay"], format="mixed", utc=True)
     df["WaitingDays"] = (appointment.dt.normalize() - scheduled.dt.normalize()).dt.days
 
+    # 1b. Día de la semana de la cita (0=Lunes ... 6=Domingo), feature C1-2.
+    df["Weekday"] = appointment.dt.weekday
+
     # 2. Edad negativa → descartar fila.
     df = df[df["Age"] >= 0]
 
@@ -79,6 +82,7 @@ def load_cleaned(path: str | None = None) -> tuple[pd.DataFrame, pd.Series]:
     x["Age"] = df["Age"]
     x["Gender"] = df["Gender"]
     x["WaitingDays"] = df["WaitingDays"].astype(float)
+    x["Weekday"] = df["Weekday"].astype(float)
     # Campos del contrato sin equivalente en el dataset → nulos hasta producción.
     x["Especialidad"] = np.nan
     x["AusenciasPrevias"] = np.nan
@@ -86,11 +90,13 @@ def load_cleaned(path: str | None = None) -> tuple[pd.DataFrame, pd.Series]:
     return x, y
 
 
-# Features del modelo = campos del PredictRequest (contrato ia-api.yaml v1.2.0).
+# Features del modelo = campos del PredictRequest (contrato ia-api.yaml v1.2.0)
+# + feature derivada Weekday (C1-2, no expuesta en el contrato → default en inferencia).
 FEATURES = [
     "Age",
     "Gender",
     "WaitingDays",
+    "Weekday",
     "Especialidad",
     "AusenciasPrevias",
     "CanalRecordatorio",
@@ -101,6 +107,7 @@ FEATURE_TYPES: dict[str, str] = {
     "Age": "numeric",
     "Gender": "categorical",
     "WaitingDays": "numeric",
+    "Weekday": "numeric",
     "Especialidad": "categorical",
     "AusenciasPrevias": "numeric",
     "CanalRecordatorio": "categorical",
