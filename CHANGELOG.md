@@ -15,7 +15,7 @@ El servicio implementa el contrato [`ia-api.yaml`](https://github.com/pabloorden
 - **ModelRegistry** valida `model_min_version` (el artefacto debe cumplir `>=0.1.0`); artefacto inválido o obsoleto ⇒ modo degradado.
 - `app_version` del contrato actualizada a **1.2.0** (coherente con `ia-api.yaml` v1.2.0); repo a **0.3.0**.
 - Feature engineering potencial no incluida en esta iteración (queda documentada): `Neighbourhood` por OneHot (sin target encoding), día de semana no usado, `especialidad`/`ausencias_previas`/`canal_recordatorio` del contrato sin equivalente en el dataset (usan defaults). Decisiones detalladas en `data/CHECKLIST.md`.
-- Commit: pendiente (se registra al cierre de C1-1).
+- Commit: `422ca98`.
 
 ## [0.2.0] — Sprint 0 completo (2026-09-15)
 
