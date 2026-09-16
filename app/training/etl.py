@@ -6,12 +6,21 @@ Limpieza reproducible de los datos sucios detectados en C0-3:
 - Handcap>1 → binarizar (una discapacidad o más).
 - SMS_received es endógeno (recordatorio dirigido a grupo de riesgo) → se retiene cruda
   en el DataFrame, pero no se usa como feature por defecto.
+
+Alineación con el contrato `PredictRequest` (C1-1): `load_cleaned` devuelve **solo los 6
+campos del request** (edad, género, días de espera, especialidad, ausencias previas y canal
+de recordatorio). Los 3 que el dataset no expone (`Especialidad`, `AusenciasPrevias`,
+`CanalRecordatorio`) se devuelven como NaN; el pipeline los imputa con un valor neutro
+durante el entrenamiento y, además, los `defaults` del artefacto mantienen ese valor. Cuando
+haya datos reales de producción (C4-1+), se reentrena con esas columnas ya pobladas y el
+imputer deja de intervenir.
 """
 
 from __future__ import annotations
 
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 
 from app.config import Settings, get_settings
@@ -58,22 +67,41 @@ def clean(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def load_cleaned(path: str | None = None) -> tuple[pd.DataFrame, pd.Series]:
-    """Carga y limpia el dataset, devolviendo (X, y)."""
+    """Carga y limpia el dataset, devolviendo (X, y) alineado al PredictRequest.
+
+    X contiene exactamente las 6 features del contrato; las 3 sin equivalente en el
+    dataset se rellenan con NaN (se imputan en el pipeline y persistidas por `defaults`).
+    """
     df = clean(load_raw(path))
     y = df["No-show"]
-    x = df.drop(columns=["PatientId", "AppointmentID", "ScheduledDay", "AppointmentDay", "No-show"])
+
+    x = pd.DataFrame(index=df.index)
+    x["Age"] = df["Age"]
+    x["Gender"] = df["Gender"]
+    x["WaitingDays"] = df["WaitingDays"].astype(float)
+    # Campos del contrato sin equivalente en el dataset → nulos hasta producción.
+    x["Especialidad"] = np.nan
+    x["AusenciasPrevias"] = np.nan
+    x["CanalRecordatorio"] = np.nan
     return x, y
 
 
-# Features numéricas de entrada al modelo (sin SMS_received: endógeno).
+# Features del modelo = campos del PredictRequest (contrato ia-api.yaml v1.2.0).
 FEATURES = [
-    "Gender",
     "Age",
-    "Neighbourhood",
-    "Scholarship",
-    "Hipertension",
-    "Diabetes",
-    "Alcoholism",
-    "Handcap",
+    "Gender",
     "WaitingDays",
+    "Especialidad",
+    "AusenciasPrevias",
+    "CanalRecordatorio",
 ]
+
+# Tipo esperado por el pipeline/imputer por feature.
+FEATURE_TYPES: dict[str, str] = {
+    "Age": "numeric",
+    "Gender": "categorical",
+    "WaitingDays": "numeric",
+    "Especialidad": "categorical",
+    "AusenciasPrevias": "numeric",
+    "CanalRecordatorio": "categorical",
+}

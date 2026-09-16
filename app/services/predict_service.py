@@ -1,10 +1,10 @@
 """Servicio de predicción de riesgo de no-show.
 
-Usa el artefacto de entrenamiento (C1-1) cargado por `ModelRegistry`: un pipeline de
-scikit-learn que espera un DataFrame con las features del dataset (`Age`, `Gender`,
-`WaitingDays`, comorbilidades...). El contrato `PredictRequest` no expone todas esas
-columnas, por lo que las no mapeadas se rellenan con los valores por defecto de
-entrenamiento guardados en el artefacto (`defaults`).
+Usa el artefacto de entrenamiento (C1-1) cargado por `ModelRegistry`. El pipeline espera
+un DataFrame con las 6 features del contrato `PredictRequest` (edad, género, días de
+espera, especialidad, ausencias previas, canal de recordatorio). Las 3 últimas aún no
+tienen datos reales en el dataset de entrenamiento (se imputan a un valor neutro dentro
+del pipeline); cuando haya datos de producción se reentrena con las mismas columnas.
 """
 
 import logging
@@ -26,11 +26,14 @@ def _score_to_banda(score: float) -> BandaRiesgo:
     return "Alto"
 
 
-# Mapeo de campos del contrato PredictRequest → columnas del dataset de entrenamiento.
+# Mapeo de campos del contrato PredictRequest → features del modelo (biunívoco).
 _REQUEST_TO_FEATURE = {
     "edad": "Age",
     "genero": "Gender",
     "dias_espera": "WaitingDays",
+    "especialidad": "Especialidad",
+    "ausencias_previas": "AusenciasPrevias",
+    "canal_recordatorio": "CanalRecordatorio",
 }
 
 
@@ -68,7 +71,16 @@ class PredictService:
         row = dict(artifact["defaults"])
         for req_field, feature in _REQUEST_TO_FEATURE.items():
             row[feature] = getattr(request, req_field)
-        return pd.DataFrame([row], columns=artifact["features"])
+        frame = pd.DataFrame([row], columns=artifact["features"])
+        # Coercer dtypes a los tipos con que se entrenó el pipeline: numéricas a
+        # float64, categóricas a str (compatibilidad request ↔ SimpleImputer).
+        feature_types = artifact.get("feature_types", {})
+        for col in artifact["features"]:
+            if feature_types.get(col) == "categorical":
+                frame[col] = frame[col].astype(str)
+            elif feature_types.get(col) == "numeric":
+                frame[col] = frame[col].astype("float64")
+        return frame
 
     @staticmethod
     def _placeholder_score(request: PredictRequest) -> float:

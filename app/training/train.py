@@ -3,10 +3,15 @@
 Pipeline:
 1. Cargar y limpiar el dataset Kaggle (ETL de `app.training.etl`).
 2. Dividir train/test de forma estratificada (mantiene la proporción 20/80).
-3. Transformar con ColumnTransformer (numéricas escaladas + binarias + categóricas).
-4. Entrenar LogisticRegression con `class_weight="balanced"` (desbalanceo 1:4).
+3. Transformar con ColumnTransformer: imputar con valor neutro las features que el
+   dataset aún no expone (Especialidad, AusenciasPrevias, CanalRecordatorio → NaN),
+   escalar numéricas y codificar categóricas (handle_unknown="ignore").
+4. Entrenar RandomForest con `class_weight="balanced"` (desbalanceo 1:4).
 5. Evaluar AUC-ROC, sensibilidad (recall minoritaria) y especificidad.
 6. Persistir en `MODEL_PATH` un artefacto joblib con el pipeline y metadatos.
+
+Cuando lleguen datos reales de producción con esas 3 columnas pobladas (C4-1+), se
+reentrena con el mismo esquema y los imputers simplemente dejan de actuar.
 
 Ejecución: `python -m app.training.train` desde la raíz del proyecto.
 """
@@ -23,6 +28,7 @@ import numpy as np
 import pandas as pd
 from sklearn.compose import ColumnTransformer
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.impute import SimpleImputer
 from sklearn.metrics import (
     accuracy_score,
     confusion_matrix,
@@ -35,20 +41,14 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 
 from app.config import Settings, get_settings
-from app.training.etl import FEATURES, load_cleaned
+from app.training.etl import FEATURE_TYPES, FEATURES, load_cleaned
 
 logger = logging.getLogger(__name__)
 
-CATEGORICAL = ["Gender", "Neighbourhood"]
-BINARY = ["Scholarship", "Hipertension", "Diabetes", "Alcoholism", "Handcap"]
-NUMERIC_WITH_SCALE = ["Age", "WaitingDays"]
+# Valor neutro con que se imputan las columnas ausentes (hoy todo NaN en el dataset).
+CATEGORICAL_FILL = "desconocido"
+NUMERIC_FILL = 0.0
 
-# Features del request que el dataset no expone (no entrenables hoy): se documentan
-# para la inferencia (se rellenan con valor neutro en `predict_service`).
-REQUEST_ONLY = ["especialidad", "ausencias_previas", "canal_recordatorio"]
-
-# Modelo base C1-1: RandomForest prioriza sensibilidad (detectar no-shows reales),
-# con mejor AUC que LogisticRegression sobre el mismo split.
 MODEL_KWARGS = {
     "n_estimators": 120,
     "max_depth": 15,
@@ -58,13 +58,32 @@ MODEL_KWARGS = {
 }
 
 
+def _imputer(value: Any) -> SimpleImputer:
+    """SimpleImputer con valor constante (entrenar/inferir con columnas NaN)."""
+    return SimpleImputer(strategy="constant", fill_value=value)
+
+
 def build_pipeline(model_kwargs: dict | None = None) -> Pipeline:
-    """Construye el pipeline preprocesado + RandomForest."""
+    """Construye el pipeline: imputar → escalar/OHE → RandomForest balanced."""
+    numeric_cols = [c for c in FEATURES if FEATURE_TYPES[c] == "numeric"]
+    cat_cols = [c for c in FEATURES if FEATURE_TYPES[c] == "categorical"]
     preprocessor = ColumnTransformer(
         transformers=[
-            ("num", StandardScaler(), NUMERIC_WITH_SCALE),
-            ("bin", "passthrough", BINARY),
-            ("cat", OneHotEncoder(handle_unknown="ignore"), CATEGORICAL),
+            (
+                "num",
+                Pipeline([("imp", _imputer(NUMERIC_FILL)), ("scale", StandardScaler())]),
+                numeric_cols,
+            ),
+            (
+                "cat",
+                Pipeline(
+                    [
+                        ("imp", _imputer(CATEGORICAL_FILL)),
+                        ("ohe", OneHotEncoder(handle_unknown="ignore")),
+                    ]
+                ),
+                cat_cols,
+            ),
         ]
     )
     return Pipeline(
@@ -76,18 +95,19 @@ def build_pipeline(model_kwargs: dict | None = None) -> Pipeline:
 
 
 def _defaults(x_train: pd.DataFrame) -> dict[str, Any]:
-    """Valores neutrales de entrenamiento para inferencia parcial.
+    """Valores neutros de entrenamiento para inferencia parcial.
 
-    Mediana para numéricas, moda para categóricas, 0 para binarias.
+    Mediana para numéricas, moda para categóricas; si la columna es todo NaN (los 3
+    campos aún sin datos), se usa el mismo valor de imputación del pipeline.
     """
     defaults: dict[str, Any] = {}
     for col in x_train.columns:
-        if col in NUMERIC_WITH_SCALE:
-            defaults[col] = float(x_train[col].median())
-        elif col in CATEGORICAL:
-            defaults[col] = str(x_train[col].mode()[0])
+        if FEATURE_TYPES[col] == "numeric":
+            med = x_train[col].median()
+            defaults[col] = float(NUMERIC_FILL) if pd.isna(med) else float(med)
         else:
-            defaults[col] = 0
+            mode = x_train[col].mode()
+            defaults[col] = CATEGORICAL_FILL if mode.empty else str(mode.iloc[0])
     return defaults
 
 
@@ -115,9 +135,8 @@ def train(model_path: str | None = None, random_state: int = 42) -> dict[str, An
     path = Path(model_path or settings.model_path)
 
     x, y = load_cleaned()
-    # Subconjunto de features de entrenamiento.
     x_train, x_test, y_train, y_test = train_test_split(
-        x[FEATURES], y, test_size=0.2, random_state=random_state, stratify=y
+        x, y, test_size=0.2, random_state=random_state, stratify=y
     )
     logger.info("Split: train=%d test=%d", len(x_train), len(x_test))
 
@@ -131,14 +150,13 @@ def train(model_path: str | None = None, random_state: int = 42) -> dict[str, An
     artifact = {
         "pipeline": pipeline,
         "features": FEATURES,
-        "categorical": CATEGORICAL,
-        "binary": BINARY,
-        "numeric_with_scale": NUMERIC_WITH_SCALE,
+        "feature_types": FEATURE_TYPES,
         "metrics": metrics,
         "model_version": settings.app_version,
         "dataset_shape": {"train": int(len(x_train)), "test": int(len(x_test))},
-        # Valores por defecto de entrenamiento para inferencia parcial (el contrato
-        # `PredictRequest` no expone Neighbourhood ni comorbilidades).
+        # Columnas del PredictRequest aún sin datos reales (imputadas a neutro).
+        "missing_in_training": ["Especialidad", "AusenciasPrevias", "CanalRecordatorio"],
+        # Valores neutros de entrenamiento para inferencia con PartialRequest.
         "defaults": _defaults(x_train),
     }
 

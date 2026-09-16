@@ -8,13 +8,13 @@ El servicio implementa el contrato [`ia-api.yaml`](https://github.com/pabloorden
 
 ### C1-1 — ETL + modelo base de no-show
 - **ETL** en `app/training/etl.py`: `load_raw` (resolución de rutas contra la raíz del repo), `clean` y `load_cleaned`. Limpieza sobre el dataset de C0-3: descarta `Age<0`, `WaitingDays<0` (6 filas) y binariza `Handcap>0`; excluye la feature endógena `SMS_received`.
-- **Modelo base**: pipeline `ColumnTransformer` (StandardScaler + binarias passthrough + OneHotEncoder `handle_unknown="ignore"`) + **RandomForest** con `class_weight='balanced'` (mejor AUC que LogisticRegression sobre el mismo split estratificado).
-- **Métricas en test (20%, estratificado):** AUC-ROC **0.7298**, sensibilidad (minoritaria) **0.8313**, especificidad 0.5138.
-- **Artefacto** `models/model.joblib` (no versionado, `.gitignore`): pipeline + features + defaults + métricas + versión. `app/training/train.py` expone `build_pipeline()` y `train()`; reentrenar con `python -m app.training.train`.
-- **Inferencia alineada** (`predict_service.py`): construye un DataFrame con las features del dataset mapeando `edad→Age`, `genero→Gender`, `dias_espera→WaitingDays`; las columnas que el contrato no expone (`Neighbourhood`, comorbilidades) se rellenan con defaults de entrenamiento (`.joblib`). Eliminado el vector numpy del placeholder.
-- **ModelRegistry** valida `model_min_version` (el artefacto debe cumplir `>=0.1.0`); artefacto inválido o obsoleto ⇒ modo degradado.
+- **Alineación con `PredictRequest`**: `load_cleaned` devuelve exactamente los **6 campos del contrato** (`Age`, `Gender`, `WaitingDays`, `Especialidad`, `AusenciasPrevias`, `CanalRecordatorio`). Los 3 sin equivalente en el dataset se cargan como **NaN**; un `SimpleImputer(strategy="constant")` los imputa a un valor neutro (`"desconocido"` / `0`) en entrenamiento e inferencia. Cuando lleguen datos reales de producción (C4-1+) se reentrena con el mismo esquema y el imputer deja de intervenir. Quedan marcados en el artefacto (`missing_in_training`).
+- **Modelo base**: pipeline `ColumnTransformer` + **RandomForest** con `class_weight='balanced'` y OHE con `handle_unknown="ignore"` sobre las features del contrato (soporta `genero: "Otro"` no visto).
+- **Métricas en test (20%, estratificado):** AUC-ROC **0.7049**, sensibilidad (minoritaria) **0.7188**, especificidad 0.5801. Con solo `Age`/`Gender`/`WaitingDays` informativas (las 3 restantes son constante).
+- **Artefacto** `models/model.joblib` (no versionado): pipeline + features + `feature_types` + defaults + métricas + versión + `missing_in_training`. Reentrenar con `python -m app.training.train`.
+- **Inferencia alineada** (`predict_service.py`): mapeo biunívoco contrato→feature y coerción de dtypes (numéricas float64, categóricas str) para compatibilidad con el imputer. Eliminado el vector numpy del placeholder.
+- **ModelRegistry** valida `model_min_version` (el artefacto debe cumplir `>=0.1.0`); artefacto inválido u obsoleto ⇒ modo degradado.
 - `app_version` del contrato actualizada a **1.2.0** (coherente con `ia-api.yaml` v1.2.0); repo a **0.3.0**.
-- Feature engineering potencial no incluida en esta iteración (queda documentada): `Neighbourhood` por OneHot (sin target encoding), día de semana no usado, `especialidad`/`ausencias_previas`/`canal_recordatorio` del contrato sin equivalente en el dataset (usan defaults). Decisiones detalladas en `data/CHECKLIST.md`.
 - Commit: `422ca98`.
 
 ## [0.2.0] — Sprint 0 completo (2026-09-15)
