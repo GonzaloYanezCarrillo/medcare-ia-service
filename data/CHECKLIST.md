@@ -73,4 +73,58 @@ Estrategias candidatas para C1-1 (a decidir tras split estratificado):
 
 - `data/KaggleV2-May-2016.csv` — dataset crudo (NO versionado, en `.gitignore`).
 - `scripts/inspect_dataset.py` — inspección reproducible de las validaciones anteriores.
+- `models/model.joblib` — artefacto C1-1 (NO versionado, en `.gitignore`).
 - Tablero Obsidian: tarjeta C0-3 marcada completa.
+
+---
+
+# C1-1 — ETL + Modelo base (no-show)
+
+**Fecha:** 2026-09-15 · **Owner:** Dev C · **Tarjeta:** C1-1 ✅
+
+## Decisión: entrenar con las features del contrato `PredictRequest`
+
+El modelo se entrena **exclusivamente con los 6 campos definidos en `PredictRequest`**
+(`ia-api.yaml` v1.2.0), para alinear entrenamiento e inferencia con lo que el sistema
+enviará a `POST /predict`:
+
+| Feature del contrato | Origen de datos | Estado |
+|---|---|---|
+| `Age` (edad) | Dataset Kaggle | Poblada |
+| `Gender` (genero) | Dataset Kaggle (M/F) | Poblada |
+| `WaitingDays` (dias_espera) | Derivada en ETL | Poblada |
+| `Especialidad` | No existe en el dataset | **NaN → imputer** |
+| `AusenciasPrevias` | No existe en el dataset | **NaN → imputer** |
+| `CanalRecordatorio` | No existe en el dataset | **NaN → imputer** |
+
+### Cómo se manejan los campos ausentes
+
+- En el ETL (`load_cleaned`), las 3 columnas sin datos se cargan como **NaN**.
+- `SimpleImputer(strategy="constant")` en el pipeline las imputa a un valor neutro
+  (`"desconocido"` para categóricas, `0` para numéricas) tanto en entrenamiento como en
+  inferencia.
+- El artefacto guarda `missing_in_training: [Especialidad, AusenciasPrevias, CanalRecordatorio]`
+  para trazabilidad.
+- **Cuando lleguen datos reales de producción** (reentrenamiento C4-1+): se reentrena con
+  el mismo esquema, esas columnas vendrán pobladas y los imputers dejan de intervenir — sin
+  cambiar contrato, artefacto ni inferencia.
+
+### Impacto en el modelo
+
+- Con solo `Age`/`Gender`/`WaitingDays` informativas (las otras 3 son constante), las
+  comorbilidades y `Neighbourhood` del dataset **no se usan** como features.
+- Métricas en test (20%, estratificado): **AUC-ROC 0.7049**, sensibilidad 0.7188,
+  especificidad 0.5801 (vs. 0.7298 con el dataset completo en la primera iteración).
+- `Handcap` se sigue binarizando a `>0` en `clean` (insumo potencial de reentrenamiento
+  futuro, sin impacto en el modelo actual).
+
+### Resultado
+
+```text
+model_version: 1.2.0
+features: ['Age', 'Gender', 'WaitingDays', 'Especialidad', 'AusenciasPrevias', 'CanalRecordatorio']
+missing_in_training: ['Especialidad', 'AusenciasPrevias', 'CanalRecordatorio']
+metrics: {auc_roc: 0.7049, sensibilidad: 0.7188, especificidad: 0.5801, n_test: 22105}
+```
+
+- Tablero Obsidian: tarjeta C1-1 marcada completa.
