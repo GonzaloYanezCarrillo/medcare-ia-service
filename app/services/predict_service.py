@@ -1,12 +1,20 @@
 """Servicio de predicción de riesgo de no-show.
 
-Hasta que exista un modelo real (C1-1), devuelve un score determinístico de marcado que
-permite validar el contrato y el flujo end-to-end. Se reemplaza por la inferencia de
-Scikit-Learn cuando el artefacto esté disponible.
+Usa el artefacto de entrenamiento (C1-1) cargado por `ModelRegistry`: un pipeline de
+scikit-learn que espera un DataFrame con las features del dataset (`Age`, `Gender`,
+`WaitingDays`, comorbilidades...). El contrato `PredictRequest` no expone todas esas
+columnas, por lo que las no mapeadas se rellenan con los valores por defecto de
+entrenamiento guardados en el artefacto (`defaults`).
 """
+
+import logging
+
+import pandas as pd
 
 from app.schemas.predict import BandaRiesgo, PredictRequest, PredictResponse
 from app.services.model_registry import ModelRegistry
+
+logger = logging.getLogger(__name__)
 
 
 def _score_to_banda(score: float) -> BandaRiesgo:
@@ -16,6 +24,14 @@ def _score_to_banda(score: float) -> BandaRiesgo:
     if score <= 0.50:
         return "Medio"
     return "Alto"
+
+
+# Mapeo de campos del contrato PredictRequest → columnas del dataset de entrenamiento.
+_REQUEST_TO_FEATURE = {
+    "edad": "Age",
+    "genero": "Gender",
+    "dias_espera": "WaitingDays",
+}
 
 
 class PredictService:
@@ -37,31 +53,26 @@ class PredictService:
         if self._registry.is_loaded and self._registry.model is not None:
             return self._predict_with_model(request)
 
-        # Modo degradado / de marcado (placeholder hasta C1-1).
+        # Modo degradado / de marcado (sin artefacto entrenado).
         return self._placeholder_score(request)
 
     def _predict_with_model(self, request: PredictRequest) -> float:
-        model = self._registry.model
-        features = self._feature_vector(request)
-        proba = model.predict_proba(features)[0][1]
+        artifact = self._registry.model
+        frame = self._build_feature_frame(artifact, request)
+        proba = artifact["pipeline"].predict_proba(frame)[0][1]
         return float(proba)
 
     @staticmethod
-    def _feature_vector(request: PredictRequest):
-        import numpy as np
-
-        return np.array(
-            [
-                request.edad,
-                request.dias_espera,
-                request.ausencias_previas,
-                1.0 if request.genero == "F" else 0.0,
-            ]
-        ).reshape(1, -1)
+    def _build_feature_frame(artifact: dict, request: PredictRequest) -> pd.DataFrame:
+        """Construye el DataFrame de features que espera el pipeline del artefacto."""
+        row = dict(artifact["defaults"])
+        for req_field, feature in _REQUEST_TO_FEATURE.items():
+            row[feature] = getattr(request, req_field)
+        return pd.DataFrame([row], columns=artifact["features"])
 
     @staticmethod
     def _placeholder_score(request: PredictRequest) -> float:
-        # Heurística de marcado para validar el contrato (se elimina con el modelo real).
+        # Heurística de marcado para operar sin artefacto (se reemplaza con el modelo real).
         base = min(request.dias_espera / 40.0 + request.ausencias_previas * 0.1, 1.0)
         if request.canal_recordatorio == "whatsapp":
             base = max(base - 0.05, 0.0)

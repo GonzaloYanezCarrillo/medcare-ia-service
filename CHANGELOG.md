@@ -4,6 +4,19 @@ Todas las modificaciones de este repositorio se documentan aquí, siguiendo [Kee
 
 El servicio implementa el contrato [`ia-api.yaml`](https://github.com/pabloordenes/medcare-contracts) (owner: Dev C).
 
+## [0.3.0] — Sprint 1 · C1-1 (2026-09-15)
+
+### C1-1 — ETL + modelo base de no-show
+- **ETL** en `app/training/etl.py`: `load_raw` (resolución de rutas contra la raíz del repo), `clean` y `load_cleaned`. Limpieza sobre el dataset de C0-3: descarta `Age<0`, `WaitingDays<0` (6 filas) y binariza `Handcap>0`; excluye la feature endógena `SMS_received`.
+- **Modelo base**: pipeline `ColumnTransformer` (StandardScaler + binarias passthrough + OneHotEncoder `handle_unknown="ignore"`) + **RandomForest** con `class_weight='balanced'` (mejor AUC que LogisticRegression sobre el mismo split estratificado).
+- **Métricas en test (20%, estratificado):** AUC-ROC **0.7298**, sensibilidad (minoritaria) **0.8313**, especificidad 0.5138.
+- **Artefacto** `models/model.joblib` (no versionado, `.gitignore`): pipeline + features + defaults + métricas + versión. `app/training/train.py` expone `build_pipeline()` y `train()`; reentrenar con `python -m app.training.train`.
+- **Inferencia alineada** (`predict_service.py`): construye un DataFrame con las features del dataset mapeando `edad→Age`, `genero→Gender`, `dias_espera→WaitingDays`; las columnas que el contrato no expone (`Neighbourhood`, comorbilidades) se rellenan con defaults de entrenamiento (`.joblib`). Eliminado el vector numpy del placeholder.
+- **ModelRegistry** valida `model_min_version` (el artefacto debe cumplir `>=0.1.0`); artefacto inválido o obsoleto ⇒ modo degradado.
+- `app_version` del contrato actualizada a **1.2.0** (coherente con `ia-api.yaml` v1.2.0); repo a **0.3.0**.
+- Feature engineering potencial no incluida en esta iteración (queda documentada): `Neighbourhood` por OneHot (sin target encoding), día de semana no usado, `especialidad`/`ausencias_previas`/`canal_recordatorio` del contrato sin equivalente en el dataset (usan defaults). Decisiones detalladas en `data/CHECKLIST.md`.
+- Commit: pendiente (se registra al cierre de C1-1).
+
 ## [0.2.0] — Sprint 0 completo (2026-09-15)
 
 ### C0-3 — Selección de dataset (Kaggle)
@@ -51,7 +64,7 @@ El servicio implementa el contrato [`ia-api.yaml`](https://github.com/pabloorden
 
 | Sprint | Hitos |
 |--------|-------|
-| Sprint 1 | **C1-1** ETL + modelo base (LogisticRegression/RandomForest) con el dataset de C0-3 |
-| Sprint 2 | **C2-1** `/predict` con modelo cargado en startup · **C2-2** NLP spaCy/NLTK real |
+| Sprint 1 | ~~**C1-1**~~ ETL + modelo base ✅ Delivered · **C1-2** Feature engineering avanzada (target encoding, día de semana) |
+| Sprint 2 | **C2-1** `/predict` con modelo cargado en startup ✅ Parcial (startup ya carga) · **C2-2** NLP spaCy/NLTK real |
 | Sprint 3 | **C3-1** NLP producción + métricas · Integración `.NET` (`POST /integracion/ml/*`) |
 | Sprint 4 | **C4-1** Cron job batch 48h + auth M2M `service-ia` |

@@ -1,6 +1,6 @@
 [project]
 name = "ia-service"
-version = "0.2.0"
+version = "0.3.0"
 description = "Microservicio de IA de MedCare (Track C) — NLP y predicción de no-show"
 requires-python = ">=3.11"
 

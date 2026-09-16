@@ -21,7 +21,7 @@ class Settings(BaseSettings):
     )
 
     app_name: str = "MedCare IA — API Microservicio IA"
-    app_version: str = "1.1.1"
+    app_version: str = "1.2.0"
     app_env: str = "development"
 
     api_prefix: str = ""
