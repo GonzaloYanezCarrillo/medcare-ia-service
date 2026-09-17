@@ -4,6 +4,15 @@ Todas las modificaciones de este repositorio se documentan aquí, siguiendo [Kee
 
 El servicio implementa el contrato [`ia-api.yaml`](https://github.com/pabloordenes/medcare-contracts) (owner: Dev C).
 
+## [0.3.2] — Deuda de calidad (2026-09-17)
+
+### Tests de `app/training` y higiene del repo
+- **Tests** `tests/test_etl.py` y `tests/test_train.py` (traen la cobertura de `app/training` de 0% → 99% y la global a 93%): `clean`/`load_raw`/`load_cleaned` con dataset sintético en `tmp_path` (sin depender del CSV de Kaggle, no versionado en CI); `build_pipeline` ajusta y predice un frame del contrato con las 3 columnas NaN; `_defaults`, `evaluate` y `train` persisten un artefacto joblib completo y verificable. `train()` parchea `load_cleaned` para no tocar `models/model.joblib`.
+- **README** actualizado: contrato v1.2.0 (repo `pabloordenes/medcare-contracts`), estado por Sprint C1-1/C1-2 ✅, sección de entrenamiento y nota sobre `WaitingDays`/reentrenamiento en producción.
+- **Versión sincronizada**: `app/__init__.py` pasa de 0.1.0 → **0.3.2** (alineada con `pyproject.toml`); `app_version` del contrato sigue en 1.2.0 y `model_min_version` en 0.1.0.
+- **Limpieza**: eliminado `.pyc` huérfano de `app/training/features.py` (reemplazado por `etl.py` en C1-1) y `.coverage` obsoleto.
+- 17 tests en verde; `ruff check`/`ruff format --check` limpios.
+
 ## [0.3.1] — Sprint 1 · C1-2 (2026-09-16)
 
 ### C1-2 — Feature engineering avanzada: día de la semana
