@@ -3,15 +3,16 @@
 Pipeline:
 1. Cargar y limpiar el dataset Kaggle (ETL de `app.training.etl`).
 2. Dividir train/test de forma estratificada (mantiene la proporción 20/80).
-3. Transformar con ColumnTransformer: imputar con valor neutro las features que el
-   dataset aún no expone (Especialidad, AusenciasPrevias, CanalRecordatorio → NaN),
-   escalar numéricas y codificar categóricas (handle_unknown="ignore").
+3. Transformar con ColumnTransformer: escalar numéricas y codificar categóricas
+   (handle_unknown="ignore"). Las features que el dataset aún no expone
+   (Especialidad, AusenciasPrevias, CanalRecordatorio → NaN) quedan sin señal hasta
+   que haya datos reales.
 4. Entrenar RandomForest con `class_weight="balanced"` (desbalanceo 1:4).
 5. Evaluar AUC-ROC, sensibilidad (recall minoritaria) y especificidad.
 6. Persistir en `MODEL_PATH` un artefacto joblib con el pipeline y metadatos.
 
-Cuando lleguen datos reales de producción con esas 3 columnas pobladas (C4-1+), se
-reentrena con el mismo esquema y los imputers simplemente dejan de actuar.
+Cuando el modelo se reentrene con datos reales de producción (C4-1+) que pueblen esas
+columnas, empezarán a aportar al modelo con el mismo esquema — sin cambios de código.
 
 Ejecución: `python -m app.training.train` desde la raíz del proyecto.
 """
@@ -158,9 +159,9 @@ def train(model_path: str | None = None, random_state: int = 42) -> dict[str, An
         "metrics": metrics,
         "model_version": settings.app_version,
         "dataset_shape": {"train": int(len(x_train)), "test": int(len(x_test))},
-        # Columnas del PredictRequest aún sin datos reales (imputadas a neutro).
+        # Columnas del PredictRequest aún sin datos reales (sin señal hasta producción).
         "missing_in_training": ["Especialidad", "AusenciasPrevias", "CanalRecordatorio"],
-        # Valores neutros de entrenamiento para inferencia con PartialRequest.
+        # Valores neutros de entrenamiento para inferencia parcial.
         "defaults": _defaults(x_train),
     }
 

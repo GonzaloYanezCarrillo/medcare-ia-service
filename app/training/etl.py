@@ -10,10 +10,10 @@ Limpieza reproducible de los datos sucios detectados en C0-3:
 Alineación con el contrato `PredictRequest` (C1-1): `load_cleaned` devuelve **solo los 6
 campos del request** (edad, género, días de espera, especialidad, ausencias previas y canal
 de recordatorio). Los 3 que el dataset no expone (`Especialidad`, `AusenciasPrevias`,
-`CanalRecordatorio`) se devuelven como NaN; el pipeline los imputa con un valor neutro
-durante el entrenamiento y, además, los `defaults` del artefacto mantienen ese valor. Cuando
-haya datos reales de producción (C4-1+), se reentrena con esas columnas ya pobladas y el
-imputer deja de intervenir.
+`CanalRecordatorio`) se devuelven como NaN: **no aportan señal al modelo** mientras no haya
+datos reales (sklearn las maneja como missing en entrenamiento; en inferencia se rellenan
+desde `defaults`). Cuando el modelo se reentrene con datos reales de producción (C4-1+),
+esas columnas vendrán pobladas y empezarán a aportar.
 """
 
 from __future__ import annotations
@@ -72,8 +72,8 @@ def clean(df: pd.DataFrame) -> pd.DataFrame:
 def load_cleaned(path: str | None = None) -> tuple[pd.DataFrame, pd.Series]:
     """Carga y limpia el dataset, devolviendo (X, y) alineado al PredictRequest.
 
-    X contiene exactamente las 6 features del contrato; las 3 sin equivalente en el
-    dataset se rellenan con NaN (se imputan en el pipeline y persistidas por `defaults`).
+    X contiene las features del contrato; las 3 sin equivalente en el dataset se
+    rellenan con NaN y quedan sin señal hasta que haya datos reales de producción.
     """
     df = clean(load_raw(path))
     y = df["No-show"]

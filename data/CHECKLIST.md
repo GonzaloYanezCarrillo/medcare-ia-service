@@ -93,21 +93,22 @@ enviará a `POST /predict`:
 | `Age` (edad) | Dataset Kaggle | Poblada |
 | `Gender` (genero) | Dataset Kaggle (M/F) | Poblada |
 | `WaitingDays` (dias_espera) | Derivada en ETL | Poblada |
-| `Especialidad` | No existe en el dataset | **NaN → imputer** |
-| `AusenciasPrevias` | No existe en el dataset | **NaN → imputer** |
-| `CanalRecordatorio` | No existe en el dataset | **NaN → imputer** |
+| `Especialidad` | No existe en el dataset | **Sin señal (NaN)** |
+| `AusenciasPrevias` | No existe en el dataset | **Sin señal (NaN)** |
+| `CanalRecordatorio` | No existe en el dataset | **Sin señal (NaN)** |
 
 ### Cómo se manejan los campos ausentes
 
-- En el ETL (`load_cleaned`), las 3 columnas sin datos se cargan como **NaN**.
-- `SimpleImputer(strategy="constant")` en el pipeline las imputa a un valor neutro
-  (`"desconocido"` para categóricas, `0` para numéricas) tanto en entrenamiento como en
-  inferencia.
+- En el ETL (`load_cleaned`), las 3 columnas sin datos se cargan como **NaN** y quedan
+  **sin señal** para el modelo mientras no haya datos reales (sklearn las trata como
+  missing en entrenamiento; en inferencia se rellenan desde los `defaults` del artefacto).
+- El dataset es un **ejercicio**: el objetivo es que el modelo predictivo se reentrene con
+  datos reales cuando el sistema esté en producción.
 - El artefacto guarda `missing_in_training: [Especialidad, AusenciasPrevias, CanalRecordatorio]`
   para trazabilidad.
-- **Cuando lleguen datos reales de producción** (reentrenamiento C4-1+): se reentrena con
-  el mismo esquema, esas columnas vendrán pobladas y los imputers dejan de intervenir — sin
-  cambiar contrato, artefacto ni inferencia.
+- **Cuando haya datos reales** (reentrenamiento C4-1+): se reentrena con el mismo esquema,
+  esas columnas vendrán pobladas y empezarán a aportar al modelo — sin cambiar contrato,
+  artefacto ni inferencia.
 
 ### Impacto en el modelo
 

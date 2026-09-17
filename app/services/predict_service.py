@@ -1,10 +1,11 @@
 """Servicio de predicción de riesgo de no-show.
 
 Usa el artefacto de entrenamiento (C1-1) cargado por `ModelRegistry`. El pipeline espera
-un DataFrame con las 6 features del contrato `PredictRequest` (edad, género, días de
-espera, especialidad, ausencias previas, canal de recordatorio). Las 3 últimas aún no
-tienen datos reales en el dataset de entrenamiento (se imputan a un valor neutro dentro
-del pipeline); cuando haya datos de producción se reentrena con las mismas columnas.
+un DataFrame con las features del contrato `PredictRequest` (edad, género, días de
+espera, especialidad, ausencias previas, canal de recordatorio) + `Weekday`. Las 3
+primeras del contrato aún no tienen datos reales en el dataset de entrenamiento (quedan
+sin señal hasta que haya datos de producción, C4-1+); en inferencia se rellenan desde
+los `defaults` del artefacto.
 """
 
 import logging
