@@ -1,0 +1,30 @@
+# Entornos virtuales
+.venv/
+venv/
+env/
+
+# Datos del dataset (pesados, no versionados, no van a la imagen)
+# OJO: `models/` NO se excluye: la imagen prod (Dockerfile.prod) lo copia dentro.
+data/
+*.csv
+
+# Pruebas y herramientas de dev (no van a la imagen)
+tests/
+.github/
+requirements-dev.txt
+*.log
+
+# Cache Python y Git
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.coverage
+htmlcov/
+.git/
+
+# IDE y sistema
+.vscode/
+.idea/
+.DS_Store
+.env
+.env.*

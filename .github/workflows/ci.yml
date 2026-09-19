@@ -38,3 +38,38 @@ jobs:
 
       - name: Tests (pytest)
         run: pytest --cov=app --cov-report=term-missing
+
+  docker-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Generar artefacto sintético para el build prod
+        run: python scripts/ci_dummy_artifact.py
+
+      - name: Build imagen dev
+        run: docker build -f Dockerfile -t medcare-ia:dev .
+
+      - name: Build imagen prod
+        run: docker build -f Dockerfile.prod -t medcare-ia:prod .
+
+      - name: Smoke test (contenedor prod + healthcheck)
+        run: |
+          docker run -d --name ia_prod -p 8000:8000 medcare-ia:prod
+          trap 'docker rm -f ia_prod' EXIT
+          for i in $(seq 1 30); do
+            if curl -sf http://localhost:8000/health; then break; fi
+            sleep 1
+          done
+          curl -sf http://localhost:8000/health | grep -q '"status":"healthy"'
+          curl -sf http://localhost:8000/health | grep -q '"model_loaded":true'

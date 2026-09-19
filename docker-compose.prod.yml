@@ -1,0 +1,13 @@
+services:
+  ia_service:
+    build:
+      context: .
+      dockerfile: Dockerfile.prod
+    image: medcare-ia:prod
+    container_name: ia_service_prod
+    ports:
+      - "8000:8000"
+    environment:
+      - APP_ENV=production
+    # Sin volumes: el modelo ya está dentro de la imagen (Dockerfile.prod).
+    restart: unless-stopped

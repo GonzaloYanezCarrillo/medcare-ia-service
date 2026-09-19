@@ -54,8 +54,29 @@ uvicorn app.main:app --reload
 ## Ejecución con Docker
 
 ```bash
+# Dev: monta ./app y ./models por volumen (bind). El modelo se regenera sin reconstruir.
 docker compose up --build
 ```
+
+## Despliegue de producción (Docker)
+
+El modelo (`.joblib`, 40 MB) no se versiona. Estrategia: **imagen autocontenida** que
+embebe el artefacto en el build.
+
+```bash
+# 1. Entrenar (o usar el artefacto existente): genera models/model.joblib
+python -m app.training.train
+
+# 2. Construir la imagen prod (copia el artefacto dentro de la imagen)
+docker build -f Dockerfile.prod -t medcare-ia:prod .
+
+# 3. Levantar sin volumes del host
+docker compose -f docker-compose.prod.yml up -d
+```
+
+- Dev (`docker-compose.yml`): el modelo vive en `./models/` del host y se monta por bind.
+- Prod (`Dockerfile.prod` + `docker-compose.prod.yml`): el modelo vive **dentro** de la
+  imagen; `APP_ENV=production`; sin `--reload`; usuario no-root; healthcheck vía `/health`.
 
 ## Lint y tests
 
