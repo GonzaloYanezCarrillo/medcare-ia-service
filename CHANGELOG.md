@@ -4,6 +4,20 @@ Todas las modificaciones de este repositorio se documentan aquí, siguiendo [Kee
 
 El servicio implementa el contrato [`ia-api.yaml`](https://github.com/pabloordenes/medcare-contracts) (owner: Dev C).
 
+## [0.3.3] — Sprint 2 · C2-1 (2026-09-18)
+
+### C2-1 — API predict en producción
+- **Modelo precargado en startup** (`app/main.py`): el `lifespan` invoca `get_model_registry()` en `asyncio.to_thread`; `/health` refleja la disponibilidad real del artefacto desde el arranque y el primer `/predict` ya lo encuentra en memoria.
+- **Dockerfile de producción**: se elimina `--reload` (dev-only), usuario no-root (`app`), `HEALTHCHECK` con stdlib vía `/health`, 1 worker/contendor (escalado por réplicas del orquestador).
+- **`.dockerignore`**: excluye `data/`, tests, caches; permite `models/` para el build prod.
+- **Estrategia del modelo en despliegue**:
+  - Dev: `docker-compose.yml` monta `./models` por bind (se regenera el `.joblib` sin rebuild).
+  - Prod: `Dockerfile.prod` + `docker-compose.prod.yml` incorporan el artefacto **dentro de la imagen** (autocontenida, `APP_ENV=production`, sin volumes del host). Documentado en README.
+- **Validación Docker en CI** (sin necesidad de Docker local): job `docker-build` genera un artefacto sintético (`scripts/ci_dummy_artifact.py`, versión válida, NUNCA desplegable), construye ambas imágenes y smoke-testea el contenedor prod (`/health` → `healthy` + `model_loaded:true`).
+- **Decisión `clase`**: la tarjeta C2-1 pedía "probabilidad + clase + banda", pero el contrato v1.2.0 (`PredictResponse`) solo define `score_riesgo` + `banda_riesgo`. Se **mantiene alineado al contrato**: no se agrega `clase` sin coordinar con Dev B.
+- **Tests**: `tests/test_main.py` (precarga en startup y modo degradado sin artefacto). 19 tests en verde.
+- Commits: `b290aee` (+Paso 1-3 del plan C2-1).
+
 ## [0.3.2] — Deuda de calidad (2026-09-17)
 
 ### Tests de `app/training` y higiene del repo
