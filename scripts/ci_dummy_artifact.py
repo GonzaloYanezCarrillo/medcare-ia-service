@@ -38,24 +38,14 @@ from app.config import get_settings  # noqa: E402
 from app.training.etl import FEATURE_TYPES, FEATURES  # noqa: E402
 
 
-class DummyPipeline:
-    """Pipeline mínimo compatible con `predict_proba` para el artefacto sintético."""
-
-    def __init__(self, n_classes: int = 2) -> None:
-        self._clf = DummyClassifier(strategy="prior", random_state=0)
-        self.n_features_in_ = len(FEATURES)
-        self.classes_ = np.arange(n_classes, dtype=int)
-
-    def fit(self, x: pd.DataFrame, y: np.ndarray) -> DummyPipeline:
-        self._clf.fit(x, y)
-        return self
-
-    def predict_proba(self, x: pd.DataFrame) -> np.ndarray:
-        return self._clf.predict_proba(x)
-
-
 def build_dummy_artifact(out_path: Path) -> None:
-    """Entrena un dummy y persiste el artefacto con la estructura de C1.1."""
+    """Entrena un dummy y persiste el artefacto con la estructura de C1.1.
+
+    El `pipeline` es un `DummyClassifier` de sklearn a propósito: los objetos de sklearn se
+    serializan por ruta de módulo (`sklearn.dummy.DummyClassifier`) y cualquier proceso —
+    incluido uvicorn en el contenedor — puede deserializarlos. Un wrapper definido en
+    `__main__` rompería el `joblib.load` en otro proceso (modo degradado).
+    """
     rng = np.random.default_rng(0)
     n = 200
     frame = pd.DataFrame(
@@ -70,7 +60,7 @@ def build_dummy_artifact(out_path: Path) -> None:
         }
     )
     y = rng.integers(0, 2, n)
-    pipeline = DummyPipeline().fit(frame, y)
+    pipeline = DummyClassifier(strategy="prior", random_state=0).fit(frame, y)
 
     artifact = {
         "pipeline": pipeline,
