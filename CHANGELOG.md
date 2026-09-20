@@ -16,7 +16,12 @@ El servicio implementa el contrato [`ia-api.yaml`](https://github.com/pabloorden
 - **Validación Docker en CI** (sin necesidad de Docker local): job `docker-build` genera un artefacto sintético (`scripts/ci_dummy_artifact.py`, versión válida, NUNCA desplegable), construye ambas imágenes y smoke-testea el contenedor prod (`/health` → `healthy` + `model_loaded:true`).
 - **Decisión `clase`**: la tarjeta C2-1 pedía "probabilidad + clase + banda", pero el contrato v1.2.0 (`PredictResponse`) solo define `score_riesgo` + `banda_riesgo`. Se **mantiene alineado al contrato**: no se agrega `clase` sin coordinar con Dev B.
 - **Tests**: `tests/test_main.py` (precarga en startup y modo degradado sin artefacto). 19 tests en verde.
-- Commits: `b290aee` (+Paso 1-3 del plan C2-1).
+
+### Fixes CI del job `docker-build` (2026-09-20)
+- **`ImportError: No module named 'app'`**: al ejecutar `python scripts/ci_dummy_artifact.py`, Python pone `scripts/` en `sys.path` y no la raíz del repo, rompiendo los imports de `app.*`. El script ahora se auto-ubica e inserta la raíz en `sys.path` antes de importar (funciona con y sin `PYTHONPATH`). Commit `7e71e1b`.
+- **Smoke test en modo degradado** (`model_loaded:false`): el wrapper `DummyPipeline` del script se definía en `__main__`, por lo que joblib lo serializaba por referencia a ese módulo y uvicorn (proceso distinto) no podía deserializarlo. El artefacto sintético usa ahora un **`DummyClassifier` de sklearn** como `pipeline` (serializable por módulo) → el contenedor arranca con `healthy` + `model_loaded:true`. Commit `ea00b1d`.
+- **Guard anti-sobrescritura**: el script aborta si `models/model.joblib` ya contiene un modelo con métricas reales (AUC > 0), para no pisar el artefacto de producción al ejecutarlo manualmente; en CI el workspace está limpio. (Durante el diagnóstico, un run local pisó el modelo real de C1-2; se regeneró de forma determinista vía `python -m app.training.train` con las mismas métricas: AUC 0.7174, sensibilidad 0.7829, especificidad 0.5490.)
+- Commits: `b290aee` (+Paso 1-3 del plan C2-1), `8e7c2a3`, `7e71e1b`, `ea00b1d`.
 
 ## [0.3.2] — Deuda de calidad (2026-09-17)
 
