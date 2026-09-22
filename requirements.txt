@@ -13,6 +13,9 @@ scikit-learn>=1.9,<2.0
 numpy>=2.2,<3.0
 joblib>=1.4,<2.0
 pandas>=2.2,<3.0
-# spaCy y modelo de lenguaje se añaden en los sprints de NLP (C2-2+).
-# spacy>=3.8
-# descargar modelo: python -m spacy download es_core_news_sm
+
+# NLP (C2-2+): spaCy con el pipeline pequeño en español.
+# El modelo se fija por URL del release (reproducible igual en local, CI y Docker;
+# "python -m spacy download" solo funciona local y descarga la versión latente).
+spacy>=3.8,<4.0
+es-core-news-sm @ https://github.com/explosion/spacy-models/releases/download/es_core_news_sm-3.8.0/es_core_news_sm-3.8.0-py3-none-any.whl
