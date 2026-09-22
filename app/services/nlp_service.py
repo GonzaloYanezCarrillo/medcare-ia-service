@@ -1,10 +1,14 @@
 """Servicio NLP: extracción de entidades y resumen preliminar.
 
-Implementación de marcado (heurística) para validar el contrato en C0-1.
-Se reemplaza/aumenta con spaCy/NLTK en los sprints de NLP (C2-2, C3-1).
+C2-2: motor spaCy (es_core_news_sm) para lematización/normalización sobre la
+heurística de marcado de C0-1. La extracción se reemplaza por componentes
+estadísticos de spaCy de forma incremental (C2-2 → C3-1).
 """
 
+from __future__ import annotations
+
 import re
+from functools import lru_cache
 
 from app.schemas.nlp import (
     EntidadSintoma,
@@ -33,6 +37,25 @@ _URGENCIA_KEYWORDS = {
 }
 
 
+@lru_cache(maxsize=1)
+def _get_nlp():
+    """Carga (una vez) el pipeline spaCy en español, con carga diferida.
+
+    Solo se importa spaCy la primera vez que se invoca: las rutas que no usan NLP
+    (/predict, /health) no pagan el costo de importación ni de modelo.
+    """
+    import spacy
+
+    return spacy.load("es_core_news_sm")
+
+
+def _lemmatizar(texto: str) -> str:
+    """Normaliza texto a minúsculas con lemas (p. ej. 'días' → 'día', 'intensos' → 'intenso')."""
+    if not texto.strip():
+        return ""
+    return " ".join(tok.lemma_ for tok in _get_nlp()(texto.lower()))
+
+
 def _extraer_entidades(texto: str) -> list[EntidadSintoma]:
     entidades: list[EntidadSintoma] = []
     texto_l = texto.lower().strip()
@@ -43,14 +66,21 @@ def _extraer_entidades(texto: str) -> list[EntidadSintoma]:
         entidades.append(EntidadSintoma(tipo="duracion", texto=duracion, severidad=None))
 
     # Síntomas: fragmentos separados por comas/semicolons/conectores (heurística básica).
+    # El matching de severidad usa también el texto lematizado para reconocer
+    # variaciones morfológicas ('graveS', 'intensOS', ...).
     sintomas = re.split(r",|;|\by\b|tambi[né]en", texto_l)
     for s in sintomas:
         s = s.strip(" .")
         if not s or re.fullmatch(r"desde hace.*|por .*|seguido.*", s):
             continue
-        if any(k in s for k in _SEVERIDAD_KEYWORDS["alto"]):
+        s_lemma = _lemmatizar(s) if s else ""
+        if _contiene_keyword(s_lemma, _SEVERIDAD_KEYWORDS["alto"]) or _contiene_keyword(
+            s, _SEVERIDAD_KEYWORDS["alto"]
+        ):
             entidades.append(EntidadSintoma(tipo="sintoma", texto=s, severidad="alto"))
-        elif any(k in s for k in _SEVERIDAD_KEYWORDS["medio"]):
+        elif _contiene_keyword(s_lemma, _SEVERIDAD_KEYWORDS["medio"]) or _contiene_keyword(
+            s, _SEVERIDAD_KEYWORDS["medio"]
+        ):
             entidades.append(EntidadSintoma(tipo="sintoma", texto=s, severidad="medio"))
         else:
             entidades.append(EntidadSintoma(tipo="sintoma", texto=s, severidad="bajo"))
@@ -58,11 +88,21 @@ def _extraer_entidades(texto: str) -> list[EntidadSintoma]:
     return entidades
 
 
+def _contiene_keyword(texto: str, keywords: list[str]) -> bool:
+    """Comprueba si algún keyword del listado aparece como palabra/texto dentro de `texto`."""
+    return any(k in texto for k in keywords)
+
+
 def _urgencia_sugerida(texto: str) -> str:
     texto_l = texto.lower()
-    if any(k in texto_l for k in _URGENCIA_KEYWORDS["alta"]):
+    texto_lemma = _lemmatizar(texto) if texto_l else ""
+    if _contiene_keyword(texto_lemma, _URGENCIA_KEYWORDS["alta"]) or _contiene_keyword(
+        texto_l, _URGENCIA_KEYWORDS["alta"]
+    ):
         return "alta"
-    if any(k in texto_l for k in _URGENCIA_KEYWORDS["media"]):
+    if _contiene_keyword(texto_lemma, _URGENCIA_KEYWORDS["media"]) or _contiene_keyword(
+        texto_l, _URGENCIA_KEYWORDS["media"]
+    ):
         return "media"
     return "baja"
 
