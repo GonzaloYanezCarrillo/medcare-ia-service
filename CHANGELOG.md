@@ -4,6 +4,16 @@ Todas las modificaciones de este repositorio se documentan aquí, siguiendo [Kee
 
 El servicio implementa el contrato [`ia-api.yaml`](https://github.com/pabloordenes/medcare-contracts) (owner: Dev C).
 
+## [0.4.0] — Sprint 2 · C2-2 (2026-09-20)
+
+### C2-2 — Motor NLP con spaCy
+- **Dependencia reproducible**: `spacy>=3.8,<4.0` + `es-core-news-sm` fijado por URL del release (instala igual en local 3.14, CI y Docker; sin depender de `python -m spacy download`).
+- **Motor spaCy integrado** en `app/services/nlp_service.py`: carga diferida y cacheada (`lru_cache`), solo se importa el modelo cuando se usan las rutas `/nlp/*` (`/predict` y `/health` no pagan ese costo).
+- **Matching por lemas**: severidad y urgencia se evalúan también sobre el texto lematizado (`_lemmatizar`), reconociendo variaciones morfológicas que la heurística cruda no veía (p.ej. `intensos → intenso`, `convulsiones → convulsión`).
+- **Alcance**: contrato v1.2.0 intacto; las entidades de síntomas siguen con la extracción por segmentación que se afinará en **C3-1** (sintagmas nominales, resumen clínico estructurado).
+- **Tests**: `tests/test_nlp.py` +2 casos (lematización y variaciones morfológicas) → 22 tests en verde; ruff limpio.
+- Commits: `a97d40c` (dependencias), `ad69e72` (motor + lemas).
+
 ## [0.3.3] — Sprint 2 · C2-1 (2026-09-18)
 
 ### C2-1 — API predict en producción

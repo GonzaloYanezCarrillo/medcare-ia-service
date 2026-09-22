@@ -91,7 +91,8 @@ pytest --cov=app
 - **C1-1 ✅** ETL (`app/training/etl.py`), pipeline RandomForest balanced, artefacto joblib + model registry; features del `PredictRequest` (3 campos aún sin datos → NaN hasta producción).
 - **C1-2 ✅** feature `Weekday`, RandomForest retuneado (n=150, depth=12): AUC 0.7174, sensibilidad 0.7829 en test.
 - **C2-1 ✅** API predict en producción: modelo precargado en startup, `/health`, Dockerfile prod (sin `--reload`, no-root), imagen prod autocontenida con el artefacto embebido, CI valida ambos builds + smoke test. Respuesta alineada al contrato v1.2.0 (score + banda, sin `clase`).
-- **C2-2/C3-1 ▶️** NLP real con spaCy/NLTK (hoy heurística de marcado).
+- **C2-2 ✅** NLP con spaCy (`es_core_news_sm`) integrado en `nlp_service` como motor de análisis: carga diferida y cacheada, y matching de severidad/urgencia por **lemas** (detecta variaciones morfológicas que la heurística cruda no veía, p.ej. `intensos`, `convulsiones`). Los endpoints `/nlp/*` mantienen el contrato v1.2.0. Extracción fina de entidades y resumen clínico → **C3-1**.
+- **C3-1 ▶️** NLP producción: extracción de síntomas por sintagmas, resumen clínico estructurado, integración con contexto de cita.
 
 Nota: el modelo actual se entrena con el dataset Kaggle como base de ejercicio; `WaitingDays` se deriva de `ScheduledDay`/`AppointmentDay`. Al pasar a producción se reentrenará con datos reales que poblarán `Especialidad`, `AusenciasPrevias` y `CanalRecordatorio` (sin cambios de código).
 
