@@ -4,6 +4,13 @@ Todas las modificaciones de este repositorio se documentan aquí, siguiendo [Kee
 
 El servicio implementa el contrato [`ia-api.yaml`](https://github.com/pabloordenes/medcare-contracts) (owner: Dev C).
 
+## [0.5.0] — Sprint 2 · Contrato de IA (2026-09-20)
+
+### Campo `clase` en PredictResponse
+- **Servicio**: `POST /predict` ahora devuelve `clase` (`asiste`/`no_asiste`) además de `score_riesgo` y `banda_riesgo`. La clase es la predicción discreta derivada del score con umbral de decisión **0.5** (`_score_to_clase` en `app/services/predict_service.py`); el umbral queda centralizado en `_CLASE_THRESHOLD`.
+- **Schema**: `PredictResponse` agrega `clase: Literal["asiste","no_asiste"]` (coherente con la épica HU-IA-01: probabilidad + clase + banda). Pendiente de reflejar en `ia-api.yaml` del repo `medcare-contracts` y de confirmar con Dev B (parseo estricto del backend).
+- **Tests**: `tests/test_predict.py` valida el campo y la coherencia clase↔score con el umbral → 24 tests en verde; ruff limpio.
+
 ## [0.4.0] — Sprint 2 · C2-2 (2026-09-20)
 
 ### C2-2 — Motor NLP con spaCy

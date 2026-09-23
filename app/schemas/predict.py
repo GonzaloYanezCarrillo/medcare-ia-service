@@ -6,6 +6,7 @@ from pydantic import BaseModel, Field
 
 Genero = Literal["M", "F", "Otro"]
 BandaRiesgo = Literal["Bajo", "Medio", "Alto"]
+ClasePrediccion = Literal["asiste", "no_asiste"]
 CanalRecordatorio = Literal["email", "whatsapp", "ninguno"]
 
 
@@ -29,3 +30,4 @@ class PredictResponse(BaseModel):
     cita_id: str
     score_riesgo: float = Field(..., ge=0, le=1)
     banda_riesgo: BandaRiesgo
+    clase: ClasePrediccion

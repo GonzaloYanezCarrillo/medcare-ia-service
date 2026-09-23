@@ -12,10 +12,13 @@ import logging
 
 import pandas as pd
 
-from app.schemas.predict import BandaRiesgo, PredictRequest, PredictResponse
+from app.schemas.predict import BandaRiesgo, ClasePrediccion, PredictRequest, PredictResponse
 from app.services.model_registry import ModelRegistry
 
 logger = logging.getLogger(__name__)
+
+# Umbral de decisión para la clase discreta: score >= 0.5 → no_asiste.
+_CLASE_THRESHOLD = 0.5
 
 
 def _score_to_banda(score: float) -> BandaRiesgo:
@@ -25,6 +28,11 @@ def _score_to_banda(score: float) -> BandaRiesgo:
     if score <= 0.50:
         return "Medio"
     return "Alto"
+
+
+def _score_to_clase(score: float) -> ClasePrediccion:
+    """Predicción discreta (asiste/no_asiste) según el umbral de decisión."""
+    return "no_asiste" if score >= _CLASE_THRESHOLD else "asiste"
 
 
 # Mapeo de campos del contrato PredictRequest → features del modelo (biunívoco).
@@ -45,12 +53,13 @@ class PredictService:
         self._registry = registry
 
     def predict(self, request: PredictRequest) -> PredictResponse:
-        """Calcula el score y la banda de riesgo para una cita."""
+        """Calcula el score, la banda y la clase de riesgo para una cita."""
         score = self._infer_score(request)
         return PredictResponse(
             cita_id=request.cita_id,
             score_riesgo=round(score, 4),
             banda_riesgo=_score_to_banda(score),
+            clase=_score_to_clase(score),
         )
 
     def _infer_score(self, request: PredictRequest) -> float:
