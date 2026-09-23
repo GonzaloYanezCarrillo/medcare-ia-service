@@ -8,9 +8,9 @@ El servicio implementa el contrato [`ia-api.yaml`](https://github.com/pabloorden
 
 ### Campo `clase` en PredictResponse
 - **Servicio**: `POST /predict` ahora devuelve `clase` (`asiste`/`no_asiste`) además de `score_riesgo` y `banda_riesgo`. La clase es la predicción discreta derivada del score con umbral de decisión **0.5** (`_score_to_clase` en `app/services/predict_service.py`); el umbral queda centralizado en `_CLASE_THRESHOLD`.
-- **Schema**: `PredictResponse` agrega `clase: Literal["asiste","no_asiste"]` (coherente con la épica HU-IA-01: probabilidad + clase + banda). Pendiente de reflejar en `ia-api.yaml` del repo `medcare-contracts` y de confirmar con Dev B (parseo estricto del backend).
+- **Schema**: `PredictResponse` agrega `clase: Literal["asiste","no_asiste"]` (coherente con la épica HU-IA-01: probabilidad + clase + banda). Reflejado en `ia-api.yaml` del repo `medcare-contracts`.
 - **Tests**: `tests/test_predict.py` valida el campo y la coherencia clase↔score con el umbral → 24 tests en verde; ruff limpio.
-- **Contrato `medcare-contracts` v1.3.0**: `ia-api.yaml` ya incluye `clase` en `PredictResponse` (commit `1df8974` del repo de contratos); `app_version` del servicio sube a **1.3.0** y `/health` lo reporta. ⚠️ **Pendiente coordinar con Dev B** el despliegue si .NET parsea la respuesta de forma estricta.
+- **Contrato `medcare-contracts` v1.3.0**: `ia-api.yaml` ya incluye `clase` en `PredictResponse` (commit `1df8974` del repo de contratos); `app_version` del servicio sube a **1.3.0** y `/health` lo reporta. ✅ **Dev B confirmó el parseo** del nuevo campo en .NET, no hay cambio rompiente para el despliegue.
 
 ## [0.4.0] — Sprint 2 · C2-2 (2026-09-20)
 
