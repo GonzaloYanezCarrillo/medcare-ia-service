@@ -8,6 +8,10 @@ pydantic>=2.11,<3.0
 pydantic-settings>=2.9,<3.0
 python-dotenv>=1.1,<2.0
 
+# Auth M2M (C5-1/HU-AUTH-03): verificación de JWTs RS256 contra JWKS de Supabase.
+PyJWT>=2.10,<3.0
+cryptography>=44,<46
+
 # ML / NLP (wheels disponibles para CPython 3.11 y 3.14)
 scikit-learn>=1.9,<2.0
 numpy>=2.2,<3.0

@@ -4,6 +4,17 @@ Todas las modificaciones de este repositorio se documentan aquí, siguiendo [Kee
 
 El servicio implementa el contrato [`ia-api.yaml`](https://github.com/pabloordenes/medcare-contracts) (owner: Dev C).
 
+## [0.6.0] — Sprint 3 · Auth M2M (2026-09-26)
+
+### C5-1 — Auth M2M (implementación)
+- **`app/services/auth.py`**: verificación de JWT RS256 con rol `service-ia`. La clave pública se resuelve por **JWKS de Supabase** (`JWT_JWKS_URL`) en producción, o por **`JWT_PUBLIC_KEY_PEM`** inyectado en dev/test (tokens autocontenidos, sin depender de Supabase). Claims verificados: `iss`, `aud`, `exp` (obligatorios); algoritmos limitados a `RS256`.
+- **Aplicado a rutas**: `/predict` y `/nlp/*` exigen `Authorization: Bearer <JWT>` con rol `service-ia` (alineado con `x-roles` de `ia-api.yaml` y `auth.yaml`); `/health` queda pública (contrato: `security: []`).
+- **Respuestas de seguridad**: sin header → `401`; token expirado/firma inválida → `401`; rol distinto al requerido → `403`; sin `JWT_JWKS_URL` ni `JWT_PUBLIC_KEY_PEM` → `503` (**fail-closed**: deniega en lugar de abrir las rutas).
+- **Config**: `app/config.py` agrega `jwt_jwks_url`, `jwt_public_key_pem`, `jwt_issuer`, `jwt_audience`, `jwt_required_role`; documentadas en `.env.example`.
+- **Dependencias**: `PyJWT>=2.10,<3.0` + `cryptography>=44,<46` en `requirements.txt` (runtime).
+- **Tests**: `tests/test_auth.py` (token válido, 401 sin header/vencido/firma incorrecta, 403 rol inadecuado, `/health` abierto) + tests de `/predict`/`/nlp` actualizados con header autenticado.
+- Estado del tablero: C5-1 sigue planificado en Sprint 5 (no se re-planificó); la implementación queda lista como bloqueador del gate de integración.
+
 ## [0.5.0] — Sprint 2 · Contrato de IA (2026-09-20)
 
 ### Campo `clase` en PredictResponse

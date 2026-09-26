@@ -8,9 +8,12 @@ from app.schemas.nlp import (
     NlpSintomasRequest,
     NlpSintomasResponse,
 )
+from app.services.auth import require_m2m
 from app.services.nlp_service import NlpService
 
 router = APIRouter(prefix="/nlp", tags=["NLP"])
+
+NL_AUTH = [Depends(require_m2m)]
 
 
 def get_nlp_service() -> NlpService:
@@ -22,6 +25,7 @@ def get_nlp_service() -> NlpService:
     "/sintomas",
     response_model=NlpSintomasResponse,
     summary="Extraer entidades de síntomas desde texto libre",
+    dependencies=NL_AUTH,
 )
 def extraer_sintomas(
     request: NlpSintomasRequest, service: NlpService = Depends(get_nlp_service)
@@ -34,6 +38,7 @@ def extraer_sintomas(
     "/resumen",
     response_model=NlpResumenResponse,
     summary="Generar resumen clínico y extraer entidades desde texto libre",
+    dependencies=NL_AUTH,
 )
 def generar_resumen(
     request: NlpResumenRequest, service: NlpService = Depends(get_nlp_service)

@@ -29,12 +29,23 @@ ia_service/
 
 ## Endpoints (contrato v1.3.0)
 
-| Método | Ruta            | Descripción                                        |
-|--------|-----------------|----------------------------------------------------|
-| GET    | `/health`       | Health check (status, modelo cargado, versión)     |
-| POST   | `/nlp/sintomas` | Extraer entidades de síntomas desde texto libre    |
-| POST   | `/nlp/resumen`  | Resumen clínico preliminar + entidades (HU-NLP-03) |
-| POST   | `/predict`      | Score, banda y clase de riesgo de no-show         |
+| Método | Ruta            | Auth M2M  | Descripción                                        |
+|--------|-----------------|-----------|----------------------------------------------------|
+| GET    | `/health`       | Pública   | Health check (status, modelo cargado, versión)     |
+| POST   | `/nlp/sintomas` | `service-ia` | Extraer entidades de síntomas desde texto libre  |
+| POST   | `/nlp/resumen`  | `service-ia` | Resumen clínico preliminar + entidades (HU-NLP-03) |
+| POST   | `/predict`      | `service-ia` | Score, banda y clase de riesgo de no-show         |
+
+El contrato `ia-api.yaml` declara `bearerAuth` global. Todas las rutas excepto
+`/health` exigen un **JWT M2M** con rol `service-ia` (firma RS256 verificada contra el
+JWKS de Supabase en producción, o contra `JWT_PUBLIC_KEY_PEM` en dev/test). Sin auth
+eso se traduce en `401`/`403`; si el servicio no tiene ninguna fuente de claves
+configurada (`JWT_JWKS_URL`/`JWT_PUBLIC_KEY_PEM`) responde `503` (deniega en lugar de
+abrir las rutas).
+
+Para probar localmente sin Supabase, generar un token RS256 firmado con la privada
+correspondiente a `JWT_PUBLIC_KEY_PEM` y pasar `Authorization: Bearer <jwt>`:
+`iss`/`aud` deben coincidir con `JWT_ISSUER`/`JWT_AUDIENCE` y `role` = `service-ia`.
 
 Swagger interactivo: `http://localhost:8000/docs`.
 
@@ -92,6 +103,7 @@ pytest --cov=app
 - **C1-2 ✅** feature `Weekday`, RandomForest retuneado (n=150, depth=12): AUC 0.7174, sensibilidad 0.7829 en test.
 - **C2-1 ✅** API predict en producción: modelo precargado en startup, `/health`, Dockerfile prod (sin `--reload`, no-root), imagen prod autocontenida con el artefacto embebido, CI valida ambos builds + smoke test. Respuesta alineada al contrato v1.3.0: `score_riesgo`, `banda_riesgo` y `clase` (predicción discreta; umbral 0.5 → `no_asiste`).
 - **C2-2 ✅** NLP con spaCy (`es_core_news_sm`) integrado en `nlp_service` como motor de análisis: carga diferida y cacheada, y matching de severidad/urgencia por **lemas** (detecta variaciones morfológicas que la heurística cruda no veía, p.ej. `intensos`, `convulsiones`). Los endpoints `/nlp/*` mantienen el contrato v1.3.0. Extracción fina de entidades y resumen clínico → **C3-1**.
+- **C5-1 ✅ (impl.)** Auth M2M: `app/services/auth.py` protege `/predict` y `/nlp/*` con JWT RS256 y rol `service-ia` (JWKS de Supabase en prod, `JWT_PUBLIC_KEY_PEM` en dev/test; fail-closed → `503` si no hay claves configuradas). Rutas sin token → `401`; rol incorrecto → `403`; `/health` sigue pública. Tablero lo mantiene en Sprint 5 (no se re-planificó).
 - **C3-1 ▶️** NLP producción: extracción de síntomas por sintagmas, resumen clínico estructurado, integración con contexto de cita.
 
 Nota: el modelo actual se entrena con el dataset Kaggle como base de ejercicio; `WaitingDays` se deriva de `ScheduledDay`/`AppointmentDay`. Al pasar a producción se reentrenará con datos reales que poblarán `Especialidad`, `AusenciasPrevias` y `CanalRecordatorio` (sin cambios de código).

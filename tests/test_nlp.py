@@ -1,12 +1,14 @@
 """Tests de NLP (contrato ia-api.yaml → POST /nlp/sintomas, POST /nlp/resumen)."""
 
 from app.services.nlp_service import _lemmatizar, _urgencia_sugerida
+from tests.auth_utils import auth_headers
 
 
 def test_nlp_sintomas_ok(client):
     response = client.post(
         "/nlp/sintomas",
         json={"texto_sintomas": "Dolor de cabeza desde hace 3 días, con visión borrosa"},
+        headers=auth_headers(),
     )
     assert response.status_code == 200
     body = response.json()
@@ -15,7 +17,7 @@ def test_nlp_sintomas_ok(client):
 
 
 def test_nlp_sintomas_sin_texto_422(client):
-    response = client.post("/nlp/sintomas", json={})
+    response = client.post("/nlp/sintomas", json={}, headers=auth_headers())
     assert response.status_code == 422
 
 
@@ -26,6 +28,7 @@ def test_nlp_resumen_ok(client):
             "texto_sintomas": "Dolor de cabeza desde hace 3 días",
             "cita_id": "550e8400-e29b-41d4-a716-446655440000",
         },
+        headers=auth_headers(),
     )
     assert response.status_code == 200
     body = response.json()
@@ -44,6 +47,7 @@ def test_severidad_reconoce_variaciones_morfologicas(client):
     response = client.post(
         "/nlp/sintomas",
         json={"texto_sintomas": "Dolor de cabeza intensos desde hace 3 días"},
+        headers=auth_headers(),
     )
     assert response.status_code == 200
     severidades = [e["severidad"] for e in response.json()["entidades_extraidas"]]

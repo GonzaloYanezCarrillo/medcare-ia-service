@@ -1,6 +1,7 @@
 """Tests de POST /predict (contrato ia-api.yaml)."""
 
 from app.services.predict_service import _score_to_clase
+from tests.auth_utils import auth_headers
 
 
 def _payload(cita_id="550e8400-e29b-41d4-a716-446655440000", **overrides):
@@ -18,7 +19,7 @@ def _payload(cita_id="550e8400-e29b-41d4-a716-446655440000", **overrides):
 
 
 def test_predict_ok(client):
-    response = client.post("/predict", json=_payload())
+    response = client.post("/predict", json=_payload(), headers=auth_headers())
     assert response.status_code == 200
     body = response.json()
     assert body["cita_id"] == _payload()["cita_id"]
@@ -29,14 +30,18 @@ def test_predict_ok(client):
 
 def test_predict_clase_coherente_con_score(client):
     """La clase discreta debe derivar del score con el umbral de decisión (0.5)."""
-    response = client.post("/predict", json=_payload(ausencias_previas=8, dias_espera=40))
+    response = client.post(
+        "/predict",
+        json=_payload(ausencias_previas=8, dias_espera=40),
+        headers=auth_headers(),
+    )
     body = response.json()
     assert body["score_riesgo"] >= 0.5
     assert body["clase"] == "no_asiste"
 
 
 def test_predict_validacion_422(client):
-    response = client.post("/predict", json={"cita_id": "x"})
+    response = client.post("/predict", json={"cita_id": "x"}, headers=auth_headers())
     assert response.status_code == 422
 
 

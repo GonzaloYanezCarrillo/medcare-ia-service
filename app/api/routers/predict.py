@@ -3,6 +3,7 @@
 from fastapi import APIRouter, Depends
 
 from app.schemas.predict import PredictRequest, PredictResponse
+from app.services.auth import require_m2m
 from app.services.model_registry import get_model_registry
 from app.services.predict_service import PredictService
 
@@ -18,6 +19,7 @@ def get_predict_service() -> PredictService:
     "/predict",
     response_model=PredictResponse,
     summary="Predicción de riesgo de no-show bajo demanda",
+    dependencies=[Depends(require_m2m)],
 )
 def predecir_riesgo(
     request: PredictRequest, service: PredictService = Depends(get_predict_service)

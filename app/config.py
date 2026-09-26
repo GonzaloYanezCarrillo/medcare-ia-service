@@ -37,6 +37,16 @@ class Settings(BaseSettings):
     core_api_url: str | None = None
     core_token: str | None = None
 
+    # Auth M2M (C5-1/HU-AUTH-03): validación de JWT que recibe de .NET.
+    # El contrato auth.yaml define: JWT RS256 emitido por Supabase Auth.
+    # En producción se resuelve la clave pública vía JWKS_URL (well-known de Supabase).
+    # En dev/test se inyecta JWT_PUBLIC_KEY_PEM para tokens autocontenidos (sin Supabase).
+    jwt_jwks_url: str | None = None
+    jwt_public_key_pem: str | None = None
+    jwt_issuer: str = "https://<project-ref>.supabase.co/auth/v1"
+    jwt_audience: str = "authenticated"
+    jwt_required_role: str = "service-ia"
+
     @field_validator("api_prefix")
     @classmethod
     def _normalize_prefix(cls, value: str) -> str:
