@@ -36,3 +36,6 @@ coverage.xml
 
 # Logs
 *.log
+
+# Claves M2M del harness de integración (scripts/integracion/)
+scripts/integracion/.m2m/

@@ -8,3 +8,6 @@ httpx>=0.28,<1.0
 
 # Visualización de diagnóstico del modelo (scripts/explore_model.py)
 matplotlib>=3.9,<4.0
+
+# Validación de contrato en el harness de integración (scripts/integracion/)
+openapi-spec-validator>=0.7,<1.0

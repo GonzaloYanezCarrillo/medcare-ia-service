@@ -4,6 +4,17 @@ Todas las modificaciones de este repositorio se documentan aquí, siguiendo [Kee
 
 El servicio implementa el contrato [`ia-api.yaml`](https://github.com/pabloordenes/medcare-contracts) (owner: Dev C).
 
+## [0.7.1] — Sprint 3 · Harness de integración IA ↔ .NET (2026-09-29)
+
+### I6-2 — Prueba de integración (consumidor simulado .NET)
+- **`scripts/integracion/`**: harness que levanta el servicio IA real con uvicorn y lo valida como lo haría el backend .NET (Dev B) contra `ia-api.yaml`.
+- **`harness.py`**: orquesta el ciclo completo (arranca uvicorn → espera `/health` → valida el contrato → ejecuta el consumidor → apaga el proceso; exit code 0/1 para CI).
+- **`consumidor_dotnet.py`**: pasos de integración por HTTP real — `GET /health`, `POST /predict`, `POST /nlp/sintomas`, `POST /nlp/resumen` y errores HTTP (401 sin token, 403 rol no autorizado, 422 payload inválido) — validando campos, enums y coherencias (banda↔score por umbrales, clase↔score por umbral 0.5).
+- **`m2m_keys.py`**: simula Supabase Auth localmente — genera un par RSA e emite JWTs M2M RS256 con rol `service-ia`; el servicio los verifica contra `JWT_PUBLIC_KEY_PEM` (fail-closed intacto: sin token → 401, no 503). Las claves son efímeras y van en `.gitignore`.
+- **Validación de contrato (C5-2, parcial)**: `/openapi.json` emitido se valida con `openapi-spec-validator` y todas las rutas de `ia-api.yaml` (health, nlp/sintomas, nlp/resumen, predict) quedan verificadas contra el spec del servicio.
+- **Dependencia dev**: `openapi-spec-validator>=0.7,<1.0` en `requirements-dev.txt`.
+- **Resultado**: 1 spec OpenAPI válido + 27 verificaciones de integración en verde (harness re-ejecutable: `python scripts/integracion/harness.py`).
+
 ## [0.7.0] — Sprint 3 · C3-1 Resumen clínico (2026-09-29)
 
 ### C3-1 — Resumen clínico preliminar por cita (implementación)
