@@ -73,6 +73,12 @@ def test_resumen_extrae_medicamento():
     assert "insulina" in _extraer_medicamentos("Toma insulina tres veces al día")
 
 
+def test_extraccion_medicamento_no_duplica_con_acento():
+    """C3-1: 'insulina' (lista) y su lema con tilde no se reportan dos veces."""
+    medicamentos = _extraer_medicamentos("Me recetaron insulina y sufro de diabetes")
+    assert medicamentos == ["insulina"]
+
+
 def test_resumen_extrae_alergia():
     """C3-1: las alergias se detectan por marcador y se limpia el artículo."""
     assert _extraer_alergias("soy alérgico a la penicilina") == ["penicilina"]

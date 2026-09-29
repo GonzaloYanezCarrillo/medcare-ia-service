@@ -8,6 +8,7 @@ estadísticos de spaCy de forma incremental (C2-2 → C3-1).
 from __future__ import annotations
 
 import re
+import unicodedata
 from functools import lru_cache
 
 from app.schemas.nlp import (
@@ -78,17 +79,33 @@ def _normalizar_candidato(candidato: str) -> str:
         return candidato
 
 
+def _sin_acentos(texto: str) -> str:
+    """Normaliza una palabra para comparar sin distinguir acentos/case."""
+    nfd = unicodedata.normalize("NFD", texto.lower())
+    return "".join(c for c in nfd if unicodedata.category(c) != "Mn")
+
+
 def _extraer_medicamentos(texto: str) -> list[str]:
     """Detecta medicamentos: por lista conocida o por marcador de medicación."""
     texto_l = texto.lower()
     hallazgos: list[str] = []
+    vistos = set()
     for medicamento in _MEDICAMENTOS_CONOCIDOS:
         if medicamento in texto_l:
             hallazgos.append(medicamento)
+            vistos.add(_sin_acentos(medicamento))
     for match in _MEDICACION_PATTERN.finditer(texto_l):
-        candidato = _normalizar_candidato(match.group(1))
-        if candidato and candidato not in hallazgos:
+        crudo = match.group(1).strip(".,; ")
+        # Si la palabra capturada ya está en la lista conocida (insensible a
+        # acentos), no hace falta lematizarla: basta la entrada canónica.
+        clave = _sin_acentos(crudo)
+        if clave in vistos:
+            continue
+        candidato = _normalizar_candidato(crudo)
+        clave = _sin_acentos(candidato)
+        if candidato and clave not in vistos:
             hallazgos.append(candidato)
+            vistos.add(clave)
     return hallazgos
 
 
