@@ -4,6 +4,15 @@ Todas las modificaciones de este repositorio se documentan aquí, siguiendo [Kee
 
 El servicio implementa el contrato [`ia-api.yaml`](https://github.com/pabloordenes/medcare-contracts) (owner: Dev C).
 
+## [0.7.0] — Sprint 3 · C3-1 Resumen clínico (2026-09-29)
+
+### C3-1 — Resumen clínico preliminar por cita (implementación)
+- **`POST /nlp/resumen`** ahora emite una **ficha clínica estructurada** en el campo `resumen`, encabezada por `Ficha clínica preliminar — Cita {cita_id}`, con secciones legibles: Síntomas (con severidad), Duración, Medicamentos, Alergias y Urgencia sugerida. El contrato **no se rompe**: `NlpResumenRequest` ya admitía `cita_id` y el schema de respuesta es idéntico al anterior; solo mejora el contenido de `resumen`.
+- **Medicamentos** (`_extraer_medicamentos` en `app/services/nlp_service.py`): lista de medicamentos conocidos (coincidencia por subcadena) + detección por marcadores (`toma/tomo/tomando/medicación con/recetaron/está con`), con lematización del candidato. Entidad `tipo: "medicamento"` en `entidades_extraidas` (ya declarada en `TipoEntidad` del contrato, antes sin extraer).
+- **Alergias** (`_extraer_alergias`): marcadores `alérgico a / alergia a / alergias a` con limpieza del artículo (p. ej. `alérgico a la penicilina` → `penicilina`). Extracción sin depender de spaCy (regex + conjunto de artículos), robusta incluso si el modelo de lematización no está cargado.
+- **Ficha clínica** (`_build_ficha_clinica`): orquesta las secciones y normaliza el listado plural/singular (`Medicamentos:`/`Alergias:` solo si hay hallazgos; `Duración:` solo si se detectó).
+- **Tests**: `tests/test_nlp.py` +3 casos (extracción de medicamento sin ruido, extracción/lavado de alergia, ficha estructurada con contexto de cita) → **36 tests en verde**; ruff limpio.
+
 ## [0.6.0] — Sprint 3 · Auth M2M (2026-09-26)
 
 ### C5-1 — Auth M2M (implementación)

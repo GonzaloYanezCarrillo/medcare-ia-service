@@ -1,7 +1,14 @@
 """Tests de NLP (contrato ia-api.yaml → POST /nlp/sintomas, POST /nlp/resumen)."""
 
-from app.services.nlp_service import _lemmatizar, _urgencia_sugerida
+from app.services.nlp_service import (
+    _extraer_alergias,
+    _extraer_medicamentos,
+    _lemmatizar,
+    _urgencia_sugerida,
+)
 from tests.auth_utils import auth_headers
+
+_CITA = "550e8400-e29b-41d4-a716-446655440000"
 
 
 def test_nlp_sintomas_ok(client):
@@ -57,3 +64,30 @@ def test_severidad_reconoce_variaciones_morfologicas(client):
 def test_urgencia_reconoce_forma_lematizada():
     """C2-2: 'convulsiones' (plural/sin tilde) no casaba con 'convulsión'; el lema sí."""
     assert _urgencia_sugerida("El paciente refiere convulsiones") == "alta"
+
+
+def test_resumen_extrae_medicamento():
+    """C3-1: los medicamentos declarados en el contrato se extraen sin ruido."""
+    medicamentos = _extraer_medicamentos("Dolor de cabeza y tomo paracetamol hace 2 días")
+    assert medicamentos == ["paracetamol"]
+    assert "insulina" in _extraer_medicamentos("Toma insulina tres veces al día")
+
+
+def test_resumen_extrae_alergia():
+    """C3-1: las alergias se detectan por marcador y se limpia el artículo."""
+    assert _extraer_alergias("soy alérgico a la penicilina") == ["penicilina"]
+    assert _extraer_alergias("alergia a mariscos") == ["mariscos"]
+
+
+def test_resumen_es_ficha_clinica_estructurada(client):
+    """C3-1: el campo `resumen` es una ficha legible con contexto de la cita."""
+    response = client.post(
+        "/nlp/resumen",
+        json={"texto_sintomas": "Fiebre alta desde hace 2 días", "cita_id": _CITA},
+        headers=auth_headers(),
+    )
+    resumen = response.json()["resumen"]
+    assert f"Ficha clínica preliminar — Cita {_CITA}" in resumen
+    assert "Síntomas" in resumen
+    assert "Duración:" in resumen
+    assert "Urgencia sugerida:" in resumen

@@ -36,6 +36,79 @@ _URGENCIA_KEYWORDS = {
     "media": ["fiebre", "nauseas", "vómitos", "mareo"],
 }
 
+# Medicamentos conocidos (heurística C3-1): si aparecen en el texto, se marcan como
+# medicamento aunque no vayan precedidos de un verbo ("toma paracetamol").
+_MEDICAMENTOS_CONOCIDOS = [
+    "paracetamol",
+    "ibuprofeno",
+    "amoxicilina",
+    "aspirina",
+    "omeprazol",
+    "metformina",
+    "losartán",
+    "enalapril",
+    "salbutamol",
+    "amitriptilina",
+    "insulina",
+]
+
+# Marcadores de medicación: capturan la palabra siguiente al verbo/conector.
+_MEDICACION_PATTERN = re.compile(
+    r"(?:toma|tomo|tomando|tome|medicad[oa]\s+con|medicamento|recetaron|est[aá]\s+con)\s+"
+    r"([a-záéíóúüñ]+)",
+    re.IGNORECASE,
+)
+
+# Marcadores de alergia: "alérgico a X", "alergia a X". Captura artículo+nombre
+# (p. ej. "la penicilina") y lo limpia después en _extraer_alergias.
+_ALERGIA_PATTERN = re.compile(
+    r"(?:al[eé]rgic[oa]\s+a|alergias?\s+a)\s+"
+    r"((?:(?:el|la|los|las|un|una|unos|unas)\s+)?[a-záéíóúüñ]+)",
+    re.IGNORECASE,
+)
+
+
+def _normalizar_candidato(candidato: str) -> str:
+    """Limpia un candidato extraído: quita signos y plurales fuera de la lista."""
+    candidato = candidato.strip(".,; ")
+    # El lema convierte plurales/sufijos a la forma base (p. ej. 'penicilina').
+    try:
+        return _lemmatizar(candidato) or candidato
+    except Exception:  # noqa: BLE001
+        return candidato
+
+
+def _extraer_medicamentos(texto: str) -> list[str]:
+    """Detecta medicamentos: por lista conocida o por marcador de medicación."""
+    texto_l = texto.lower()
+    hallazgos: list[str] = []
+    for medicamento in _MEDICAMENTOS_CONOCIDOS:
+        if medicamento in texto_l:
+            hallazgos.append(medicamento)
+    for match in _MEDICACION_PATTERN.finditer(texto_l):
+        candidato = _normalizar_candidato(match.group(1))
+        if candidato and candidato not in hallazgos:
+            hallazgos.append(candidato)
+    return hallazgos
+
+
+_ARTICULOS = {"el", "la", "los", "las", "un", "una", "unos", "unas"}
+
+
+def _extraer_alergias(texto: str) -> list[str]:
+    """Detecta alergias por marcadores ('alérgico a X'), sin duplicar.
+
+    Captura el sustantivo (con su artículo) y lo limpia sin depender de spaCy,
+    para no acoplar la extracción al modelo de lematización.
+    """
+    hallazgos: list[str] = []
+    for match in _ALERGIA_PATTERN.finditer(texto.lower()):
+        partes = [p for p in match.group(1).split() if p not in _ARTICULOS]
+        candidato = " ".join(partes)
+        if candidato and candidato not in hallazgos:
+            hallazgos.append(candidato)
+    return hallazgos
+
 
 @lru_cache(maxsize=1)
 def _get_nlp():
@@ -85,6 +158,12 @@ def _extraer_entidades(texto: str) -> list[EntidadSintoma]:
         else:
             entidades.append(EntidadSintoma(tipo="sintoma", texto=s, severidad="bajo"))
 
+    # Medicamentos y alergias (tipos ya declarados en el contrato, ahora extraídos).
+    for medicamento in _extraer_medicamentos(texto_l):
+        entidades.append(EntidadSintoma(tipo="medicamento", texto=medicamento, severidad=None))
+    for alergia in _extraer_alergias(texto_l):
+        entidades.append(EntidadSintoma(tipo="alergia", texto=alergia, severidad=None))
+
     return entidades
 
 
@@ -119,15 +198,49 @@ class NlpService:
         )
 
     def resumen(self, request: NlpResumenRequest) -> NlpResumenResponse:
-        """Genera resumen clínico preliminar (POST /nlp/resumen)."""
+        """Genera resumen clínico preliminar (POST /nlp/resumen, HU-NLP-03)."""
         entidades = _extraer_entidades(request.texto_sintomas)
         urgencia = _urgencia_sugerida(request.texto_sintomas)
-        resumen = (
-            f"Consulta {request.cita_id}: {len(entidades)} hallazgo(s) identificado(s) "
-            f"a partir del relato del paciente. Urgencia preliminar: {urgencia}."
-        )
         return NlpResumenResponse(
-            resumen=resumen,
+            resumen=_build_ficha_clinica(request, entidades, urgencia),
             entidades_extraidas=entidades,
             urgencia_sugerida=urgencia,
         )
+
+
+def _build_ficha_clinica(
+    request: NlpResumenRequest, entidades: list[EntidadSintoma], urgencia: str
+) -> str:
+    """Construye la ficha clínica preliminar legible para el médico (C3-1).
+
+    Estructura mínima en texto plano (el contrato expone solo `resumen: str`):
+    identificación de la cita, síntomas con severidad, duración, medicamentos,
+    alergias y urgencia sugerida.
+    """
+    by_tipo: dict[str, list[EntidadSintoma]] = {}
+    for entidad in entidades:
+        by_tipo.setdefault(entidad.tipo, []).append(entidad)
+
+    lineas = [f"Ficha clínica preliminar — Cita {request.cita_id}", ""]
+
+    if sintomas := by_tipo.get("sintoma"):
+        lineas.append(f"Síntomas ({len(sintomas)}):")
+        for sintoma in sintomas:
+            sev = f" (severidad {sintoma.severidad})" if sintoma.severidad else ""
+            lineas.append(f"  - {sintoma.texto}{sev}")
+
+    if duraciones := by_tipo.get("duracion"):
+        lineas.append("Duración: " + ", ".join(d.texto for d in duraciones))
+
+    if medicamentos := by_tipo.get("medicamento"):
+        lineas.append("Medicamentos: " + ", ".join(m.texto for m in medicamentos))
+
+    if alergias := by_tipo.get("alergia"):
+        lineas.append("Alergias: " + ", ".join(a.texto for a in alergias))
+
+    if not sintomas and not duraciones and not medicamentos and not alergias:
+        lineas.append("Sin hallazgos estructurados detectados a partir del relato.")
+
+    lineas.append("")
+    lineas.append(f"Urgencia sugerida: {urgencia}.")
+    return "\n".join(lineas)
