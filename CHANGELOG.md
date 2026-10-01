@@ -4,6 +4,12 @@ Todas las modificaciones de este repositorio se documentan aquí, siguiendo [Kee
 
 El servicio implementa el contrato [`ia-api.yaml`](https://github.com/pabloordenes/medcare-contracts) (owner: Dev C).
 
+### Fix CI — Snapshot del contrato versionado
+- **`contracts/ia-api.yaml`**: copia del contrato (`medcare-contracts`, repo privado) versionada en este repo para que los tests de contrato corran en CI sin depender de un repo privado.
+- **`app/contract_path.py`**: resolutor compartido de la ruta del contrato (`IA_CONTRATO_PATH` → snapshot en `contracts/` → clon hermano → entorno de desarrollo), usado tanto por `tests/test_contract.py` como por `scripts/integracion/harness.py`.
+- **Corrección**: `tests/test_contract.py` lanzaba `FileNotFoundError` en tiempo de import cuando el contrato no estaba disponible (fallaba la colección de pytest en GitHub Actions, exit 2). Ahora resuelve el snapshot versionado y los 19 tests de contrato se ejecutan también en CI.
+- **Resincronización**: cuando cambie el contrato original, copiar `ia-api.yaml` a `contracts/ia-api.yaml`.
+
 ## [0.7.2] — Sprint 5 · C5-2 Pruebas de contrato de la API IA (2026-09-29)
 
 ### C5-2 — Pruebas de contrato (pytest + TestClient)

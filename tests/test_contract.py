@@ -8,41 +8,15 @@ Validan que la API cumple con `ia-api.yaml` usando TestClient:
 
 from __future__ import annotations
 
-import os
-import tempfile
 import time
-from pathlib import Path
 
 import pytest
 import yaml
+from app.contract_path import resolver_contrato
 from fastapi.testclient import TestClient
 from tests.auth_utils import auth_headers
 
-
-def _resolver_contrato() -> Path:
-    """Localiza `ia-api.yaml`.
-
-    1. Variable de entorno `IA_CONTRATO_PATH` (p. ej. el clon de medcare-contracts).
-    2. Sibling `medcare-contracts/ia-api.yaml` junto al repo de este servicio.
-    3. `<tmp>/opencode/medcare-contracts/ia-api.yaml` (entorno de desarrollo).
-    """
-    candidatos = []
-    if env_path := os.environ.get("IA_CONTRATO_PATH"):
-        candidatos.append(Path(env_path))
-    repo = Path(__file__).resolve().parents[1]
-    candidatos.append(repo.parent / "medcare-contracts" / "ia-api.yaml")
-    candidatos.append(
-        Path(tempfile.gettempdir()) / "opencode" / "medcare-contracts" / "ia-api.yaml"
-    )
-    for candidato in candidatos:
-        if candidato.exists():
-            return candidato
-    raise FileNotFoundError(
-        "No se encontro ia-api.yaml. Define IA_CONTRATO_PATH con la ruta al contrato."
-    )
-
-
-CONTRATO_PATH = _resolver_contrato()
+CONTRATO_PATH = resolver_contrato()
 
 
 def _load_contrato() -> dict:

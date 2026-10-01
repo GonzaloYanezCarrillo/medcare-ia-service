@@ -1,0 +1,194 @@
+openapi: 3.1.0
+info:
+  title: MedCare AI — API Microservicio IA
+  description: |
+    Microservicio de Inteligencia Artificial de MedCare OS.
+    Owner: Dev C (Datos e IA)
+    
+    Stack: Python 3.11, FastAPI, Scikit-Learn, spaCy/NLTK, joblib
+    
+    Roles del Servicio:
+    1. Servidor REST: Expone endpoints para Procesamiento de Lenguaje Natural (NLP) en tiempo real durante el agendamiento.
+    2. Tarea Programada (Cronjob): Se ejecuta diariamente, consulta a .NET por las citas de las próximas 48 horas, predice el riesgo (Scikit-Learn) y devuelve los resultados a .NET vía HTTP POST.
+  version: 1.3.0
+
+security:
+  - bearerAuth: []
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT M2M (Machine-to-Machine) para comunicación segura con .NET
+
+  schemas:
+    HealthResponse:
+      type: object
+      properties:
+        status: { type: string, enum: [healthy, degraded, unhealthy] }
+        model_loaded: { type: boolean }
+        version: { type: string }
+
+    EntidadSintoma:
+      type: object
+      properties:
+        tipo: { type: string, enum: [sintoma, duracion, severidad, medicamento, alergia] }
+        texto: { type: string }
+        severidad: { type: string, enum: [bajo, medio, alto] }
+
+    NlpResumenRequest:
+      type: object
+      required: [texto_sintomas, cita_id]
+      properties:
+        texto_sintomas: { type: string }
+        cita_id: { type: string, format: uuid }
+
+    NlpResumenResponse:
+      type: object
+      properties:
+        resumen: { type: string, description: "Resumen clínico preliminar estructurado" }
+        entidades_extraidas:
+          type: array
+          items:
+            $ref: '#/components/schemas/EntidadSintoma'
+        urgencia_sugerida: { type: string, enum: [baja, media, alta] }
+
+    # ── Predicción de no-show (riesgo) ───────────────────────
+    PredictRequest:
+      type: object
+      description: Entradas para calcular el riesgo de no-show de una cita (mismas features que el batch).
+      required: [cita_id, edad, genero, dias_espera, especialidad, ausencias_previas]
+      properties:
+        cita_id: { type: string, format: uuid }
+        edad: { type: integer, description: "Edad del paciente" }
+        genero: { type: string, enum: [M, F, Otro] }
+        dias_espera: { type: integer, description: "Días entre el agendamiento y la cita (WaitingDays)" }
+        especialidad: { type: string, examples: [psicologia, dental, veterinaria, medicina_general] }
+        ausencias_previas: { type: integer, description: "Número de inasistencias previas del paciente" }
+        canal_recordatorio: { type: string, enum: [email, whatsapp, ninguno], default: ninguno, description: "Canal de recordatorio ya programado (opcional)" }
+
+    PredictResponse:
+      type: object
+      required: [cita_id, score_riesgo, banda_riesgo, clase]
+      properties:
+        cita_id: { type: string, format: uuid }
+        score_riesgo: { type: number, format: float, minimum: 0, maximum: 1, description: "Probabilidad de no-show (0-1)" }
+        banda_riesgo: { type: string, enum: [Bajo, Medio, Alto], description: "Bajo <25%, Medio 25-50%, Alto >50%" }
+        clase: { type: string, enum: [asiste, no_asiste], description: "Predicción discreta derivada del score con umbral 0.5 (>=0.5 → no_asiste). Cierra HU-IA-01: probabilidad + clase + banda." }
+
+    # ── NLP — Procesamiento de síntomas (texto libre) ────────
+    NlpSintomasRequest:
+      type: object
+      description: Texto libre con los síntomas descritos por el paciente o registrados por la recepción.
+      required: [texto_sintomas]
+      properties:
+        texto_sintomas: { type: string, description: "Descripción libre de síntomas (HU-NLP-01 / HU-NLP-02)" }
+        cita_id: { type: string, format: uuid, description: "Opcional: identifica la cita a la que se asociarán los síntomas" }
+
+    NlpSintomasResponse:
+      type: object
+      properties:
+        entidades_extraidas:
+          type: array
+          items:
+            $ref: '#/components/schemas/EntidadSintoma'
+        urgencia_sugerida: { type: string, enum: [baja, media, alta], description: "Urgencia preliminar derivada de los síntomas" }
+
+paths:
+  /health:
+    get:
+      tags: [Health]
+      summary: Health check del servicio IA
+      security: []
+      responses:
+        '200':
+          description: Servicio saludable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+
+  /nlp/resumen:
+    post:
+      tags: [NLP]
+      summary: Generar resumen clínico y extraer entidades desde texto libre
+      description: Consumido síncronamente por .NET cuando un paciente agenda una cita.
+      x-roles: [service-ia]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NlpResumenRequest'
+            example:
+              texto_sintomas: "Tengo dolor de cabeza fuerte desde hace 3 días y visión borrosa"
+              cita_id: "550e8400-e29b-41d4-a716-446655440000"
+      responses:
+        '200':
+          description: Resumen generado exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NlpResumenResponse'
+
+  /nlp/sintomas:
+    post:
+      tags: [NLP]
+      summary: Extraer entidades de síntomas desde texto libre (sin generar resumen clínico)
+      description: |
+        Procesa texto libre de síntomas y extrae entidades estructuradas (síntoma, duración,
+        severidad, medicamento, alergia). Se usa en el agendamiento del paciente (HU-NLP-01)
+        y en el registro de síntomas por la recepción (HU-NLP-02), antes de generar el resumen.
+      x-roles: [service-ia]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NlpSintomasRequest'
+            example:
+              texto_sintomas: "Dolor de cabeza desde hace 3 días, con visión borrosa"
+      responses:
+        '200':
+          description: Entidades de síntomas extraídas
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NlpSintomasResponse'
+        '422':
+          description: Entrada inválida (validación Pydantic)
+
+  /predict:
+    post:
+      tags: [ML]
+      summary: Predicción de riesgo de no-show bajo demanda
+      description: |
+        Calcula el riesgo de no-show de una cita (score, banda y clase) usando las mismas features
+        del batch. Puede invocarse en línea durante el agendamiento o manualmente fuera del
+        cronjob nocturno (recalcular riesgo).
+      x-roles: [service-ia]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PredictRequest'
+            example:
+              cita_id: "550e8400-e29b-41d4-a716-446655440000"
+              edad: 34
+              genero: "F"
+              dias_espera: 5
+              especialidad: "psicologia"
+              ausencias_previas: 1
+              canal_recordatorio: "whatsapp"
+      responses:
+        '200':
+          description: Score de riesgo calculado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PredictResponse'
+        '422':
+          description: Entrada inválida (validación Pydantic)

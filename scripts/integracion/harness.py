@@ -16,7 +16,9 @@ import sys
 import time
 import urllib.request
 
+RAIZ_REPO = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, os.path.dirname(__file__))
+sys.path.insert(0, RAIZ_REPO)
 import m2m_keys  # noqa: E402
 
 PORT = 8100
@@ -32,21 +34,18 @@ def _paso_validar_contrato() -> int:
         print("  [SKIP] openapi-spec-validator no instalado (requirements-dev).")
         return 0
 
-    contrato_path = os.environ.get(
-        "IA_CONTRATO_PATH",
-        os.path.join(
-            os.path.dirname(__file__), "..", "..", "..", "medcare-contracts", "ia-api.yaml"
-        ),
-    )
-    contrato = None
-    if os.path.exists(contrato_path):
-        import yaml
+    try:
+        from app.contract_path import resolver_contrato
 
-        with open(contrato_path, encoding="utf-8") as f:
-            contrato = yaml.safe_load(f)
-    else:
-        print(f"  [SKIP] no se encontro ia-api.yaml en {contrato_path} (usa IA_CONTRATO_PATH).")
+        contrato_path = resolver_contrato()
+    except FileNotFoundError as exc:
+        print(f"  [SKIP] {exc}")
         return 0
+
+    import yaml
+
+    with open(contrato_path, encoding="utf-8") as f:
+        contrato = yaml.safe_load(f)
 
     # 1) El spec que el servicio emite es OpenAPI válido.
     with urllib.request.urlopen(f"{BASE_URL}/openapi.json", timeout=10) as resp:
@@ -103,7 +102,7 @@ def main() -> int:
             "--port",
             str(PORT),
         ],
-        cwd=os.path.join(os.path.dirname(__file__), "..", ".."),
+        cwd=RAIZ_REPO,
         env=env,
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
