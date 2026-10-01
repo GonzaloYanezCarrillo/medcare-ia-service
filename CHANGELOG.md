@@ -4,6 +4,20 @@ Todas las modificaciones de este repositorio se documentan aquí, siguiendo [Kee
 
 El servicio implementa el contrato [`ia-api.yaml`](https://github.com/pabloordenes/medcare-contracts) (owner: Dev C).
 
+## [0.7.2] — Sprint 5 · C5-2 Pruebas de contrato de la API IA (2026-09-29)
+
+### C5-2 — Pruebas de contrato (pytest + TestClient)
+- **`tests/test_contract.py`**: 19 pruebas de contrato con `TestClient` que validan la API contra `ia-api.yaml`:
+  - **OpenAPI emitido**: spec válido (`openapi-spec-validator`) y presencia de todas las rutas del contrato.
+  - **Estructura y validaciones por endpoint**: campos requeridos, enums (`genero`, `banda_riesgo`, `clase`, `urgencia_sugerida`, `tipo` de entidad), rangos (`score_riesgo` en [0,1]) y coherencias (banda↔score por umbrales, clase↔score por umbral 0.5).
+  - **`/predict`**: los 6 campos requeridos_missing → 422; valores fuera de enum → 422.
+  - **`/nlp/sintomas` y `/nlp/resumen`**: `texto_sintomas` y `cita_id` obligatorios según contrato → 422 si faltan.
+  - **Auth**: `/health` público (`security: []`); rutas protegidas sin token → 401; rol ≠ `service-ia` → 403.
+  - **Latencia de inferencia**: `/predict` < 800 ms y `/nlp/resumen` < 1500 ms (umbrales RNF).
+- **Resolución del contrato**: el test localiza `ia-api.yaml` vía `IA_CONTRATO_PATH`, sibling `medcare-contracts/`, o `<tmp>/opencode/medcare-contracts/`.
+- **Resultado**: suite completa **56 tests passed** (37 previos + 19 de contrato), `ruff` limpio.
+- **Documentación OpenAPI (Swagger)**: disponible en `/docs` y `/redoc`; `/openapi.json` es válido y contiene todas las rutas de `ia-api.yaml`.
+
 ## [0.7.1] — Sprint 3 · Harness de integración IA ↔ .NET (2026-09-29)
 
 ### I6-2 — Prueba de integración (consumidor simulado .NET)
