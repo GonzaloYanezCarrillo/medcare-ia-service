@@ -20,6 +20,9 @@ ENV/
 # Modelos y datos (grandes, no versionar)
 models/*.joblib
 models/*.pkl
+models/versions/
+models/latest.json
+models/metrics.json
 data/*
 !data/CHECKLIST.md
 *.parquet

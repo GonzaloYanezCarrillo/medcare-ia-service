@@ -200,6 +200,36 @@ def test_predict_enums(client: TestClient) -> None:
     assert r.status_code == 422
 
 
+def test_feedback_asistencia_estructura_contrato(client: TestClient) -> None:
+    """POST /feedback/asistencia: campos requeridos de FeedbackAsistenciaResponse."""
+    payload = {
+        "cita_id": "550e8400-e29b-41d4-a716-446655440000",
+        "asistio": False,
+        "fecha_cita": "2026-10-05",
+        "edad": 34,
+        "genero": "F",
+        "dias_espera": 5,
+        "especialidad": "psicologia",
+        "ausencias_previas": 1,
+        "canal_recordatorio": "whatsapp",
+        "score_riesgo": 0.63,
+    }
+    r = client.post("/feedback/asistencia", json=payload, headers=auth_headers())
+    assert r.status_code == 200
+    body = r.json()
+    assert body["cita_id"] == payload["cita_id"]
+    assert isinstance(body["asistio"], bool)
+    assert isinstance(body["registros_totales"], int) and body["registros_totales"] >= 1
+
+
+def test_feedback_asistencia_requiere_body(client: TestClient) -> None:
+    """Sin body o con campos requeridos ausentes → 422 (validación Pydantic)."""
+    r = client.post("/feedback/asistencia", json={}, headers=auth_headers())
+    assert r.status_code == 422
+    r = client.post("/feedback/asistencia", headers=auth_headers())
+    assert r.status_code == 422
+
+
 def test_auth_sin_token_401(client: TestClient) -> None:
     """Rutas protegidas sin token → 401."""
     r = client.post("/predict", json={"edad": 1}, headers={})
@@ -215,6 +245,8 @@ def test_auth_sin_token_401(client: TestClient) -> None:
         headers={},
     )
     assert r.status_code == 401
+    r = client.post("/feedback/asistencia", json={"asistio": True}, headers={})
+    assert r.status_code == 401
 
 
 def test_auth_rol_invalido_403(client: TestClient) -> None:
@@ -226,6 +258,21 @@ def test_auth_rol_invalido_403(client: TestClient) -> None:
             "edad": 20,
             "genero": "M",
             "dias_espera": 1,
+            "especialidad": "dental",
+            "ausencias_previas": 0,
+        },
+        headers=auth_headers(role="otro-rol"),
+    )
+    assert r.status_code == 403
+    r = client.post(
+        "/feedback/asistencia",
+        json={
+            "cita_id": "550e8400-e29b-41d4-a716-446655440000",
+            "asistio": True,
+            "fecha_cita": "2026-10-05",
+            "edad": 30,
+            "genero": "F",
+            "dias_espera": 3,
             "especialidad": "dental",
             "ausencias_previas": 0,
         },

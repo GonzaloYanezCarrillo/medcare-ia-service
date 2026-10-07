@@ -13,6 +13,7 @@ import json
 import os
 import subprocess
 import sys
+import tempfile
 import time
 import urllib.request
 
@@ -90,6 +91,9 @@ def main() -> int:
     env = os.environ.copy()
     env.update(m2m_keys.env_para_servicio())
     env["IA_BASE_URL"] = BASE_URL
+    # Aísla el JSONL de feedback del harness para no ensuciar data/ del repo (C4-1).
+    tmpdir = tempfile.mkdtemp(prefix="ia_harness_")
+    env["FEEDBACK_PATH"] = os.path.join(tmpdir, "asistencia.jsonl")
 
     proc = subprocess.Popen(
         [

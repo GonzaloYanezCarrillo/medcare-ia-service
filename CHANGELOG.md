@@ -4,6 +4,22 @@ Todas las modificaciones de este repositorio se documentan aquí, siguiendo [Kee
 
 El servicio implementa el contrato [`ia-api.yaml`](https://github.com/pabloordenes/medcare-contracts) (owner: Dev C).
 
+## [0.7.3] — Sprint 4 · C4-1 Feedback y retrain (HU-IA-02) (2026-10-06)
+
+### C4-1 — Feedback de asistencia real y reentrenamiento con gate
+- **Contrato `medcare-contracts` v1.4.0**: `ia-api.yaml` añade `POST /feedback/asistencia` (tag `Feedback`, rol `service-ia`, 200/422) con los schemas `FeedbackAsistenciaRequest` (required: `cita_id`, `asistio`, `fecha_cita`, `edad`, `genero`, `dias_espera`, `especialidad`, `ausencias_previas`; opcional `canal_recordatorio`, `score_riesgo`) y `FeedbackAsistenciaResponse` (`cita_id`, `asistio`, `registros_totales`). Snapshot `contracts/ia-api.yaml` sincronizado; `app_version` sube a **1.4.0**.
+- **`app/services/feedback_store.py`**: persistencia JSONL (`data/feedback/asistencia.jsonl`) con **upsert idempotente por `cita_id`** (último estado gana), escritura atómica (tmp + `os.replace`) y whitelist `CAMPOS_PERMITIDOS` (RNF-SEG-03: solo features + etiqueta, nunca contenido clínico).
+- **`app/api/routers/feedback.py`** + `app/schemas/feedback.py`: `POST /feedback/asistencia` protegido con JWT M2M (rol `service-ia`); `FeedbackStore` inyectable vía `get_feedback_store()`.
+- **Reentrenamiento con feedback** (`app/training/etl.py` → `load_feedback`, `app/training/train.py`): `python -m app.training.train --feedback` concatena el feedback al dataset Kaggle (etiqueta invertida: `asistio=False` → no-show=1) y aplica el **gate de no-degradación** `evaluar_contra_baseline` (AUC y sensibilidad ≥ baseline − `--epsilon`, default 0.01). Si no promueve, **no** sobrescribe el artefacto vigente y el CLI sale con código `1`.
+- **Versionado semver propio del modelo** (`siguiente_version`): independiente de `app_version`; `1.0.0` inicial, bump menor con feedback, patch en reentrenamientos del mismo dataset. Metadatos de linaje (`model_version`, `parent_version`, `trained_at`, `training_data`), archivo en `models/versions/<v>/model.joblib` y puntero `models/latest.json`.
+- **Comparativo de métricas** `models/metrics.json`: baseline vs. reentrenado con `delta` y resultado del gate (también en rechazos, para auditoría).
+- **Recarga del modelo**: offline + reinicio (sin hot-reload).
+- **Tests**: `tests/test_feedback_store.py` (8), `tests/test_feedback.py` (endpoint: registro, upsert, 401/403, 422 parametrizados, whitelist clínico), `tests/test_retrain.py` (21: `load_feedback`, gate/tolerancias, promoción/rechazo, versionado, `metrics.json`); tests de contrato de `/feedback/asistencia` en `tests/test_contract.py`. **Suite completa: 111 tests passed**, `ruff` limpio.
+- **Smoke end-to-end** (datos reales + 40 registros de feedback sintéticos, en directorio temporal): baseline `1.0.0` (AUC 0.7174/sens 0.7829) → retrained `1.1.0` (AUC 0.7180/sens 0.8103), gate **promovido**.
+- **Harness I6-2**: `consumidor_dotnet.py` añade el PASO 5 (`POST /feedback/asistencia`: 200, espejo de campos, upsert idempotente, 422 y 401); `harness.py` aísla el JSONL del feedback en un directorio temporal (`FEEDBACK_PATH`). Harness completo en verde (exit 0), incluida la validación de que `/feedback/asistencia` está expuesta por `/openapi.json`.
+- **`.env.example`/`.gitignore`**: `FEEDBACK_PATH` documentado; `models/versions/`, `models/latest.json` y `models/metrics.json` ignorados.
+- **Documentación**: README (endpoints v1.4.0, sección de entrenamiento/versionado/gate) y `docs/graficos/REPORTE.md` (comparativo del smoke).
+
 ### Fix CI — Snapshot del contrato versionado
 - **`contracts/ia-api.yaml`**: copia del contrato (`medcare-contracts`, repo privado) versionada en este repo para que los tests de contrato corran en CI sin depender de un repo privado.
 - **`app/contract_path.py`**: resolutor compartido de la ruta del contrato (`IA_CONTRATO_PATH` → snapshot en `contracts/` → clon hermano → entorno de desarrollo), usado tanto por `tests/test_contract.py` como por `scripts/integracion/harness.py`.

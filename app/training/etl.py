@@ -24,6 +24,7 @@ import numpy as np
 import pandas as pd
 
 from app.config import Settings, get_settings
+from app.services.feedback_store import FeedbackStore
 
 # Raíz del proyecto (app/training/etl.py → 3 niveles arriba).
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
@@ -88,6 +89,40 @@ def load_cleaned(path: str | None = None) -> tuple[pd.DataFrame, pd.Series]:
     x["AusenciasPrevias"] = np.nan
     x["CanalRecordatorio"] = np.nan
     return x, y
+
+
+def load_feedback(path: str | None = None) -> tuple[pd.DataFrame, pd.Series]:
+    """Carga el feedback de asistencia real (C4-1 / HU-IA-02) alineado al modelo.
+
+    Devuelve (X, y) con las mismas `FEATURES` que `load_cleaned`, para poder
+    concatenarlos y reentrenar. Semántica de la etiqueta: en el dataset Kaggle
+    `y=1` es no-show, así que se invierte `asistio` (`asistio=False` → y=1).
+
+    RNF-SEG-03: el JSONL solo contiene features pre-cita + etiqueta; X se
+    construye únicamente con `FEATURES` (el label y los metadatos nunca entran
+    como features → sin leakage desde el feedback).
+    """
+    settings: Settings = get_settings()
+    store = FeedbackStore(path or settings.feedback_path)
+    registros = store.registros()
+    if not registros:
+        return pd.DataFrame(columns=FEATURES), pd.Series(dtype=int)
+
+    df = pd.DataFrame(registros)
+    x = pd.DataFrame(index=df.index)
+    x["Age"] = pd.to_numeric(df["edad"], errors="coerce")
+    x["Gender"] = df["genero"].astype(str)
+    x["WaitingDays"] = pd.to_numeric(df["dias_espera"], errors="coerce")
+    # Weekday deriva de la fecha de la cita (misma derivación que en el ETL Kaggle).
+    x["Weekday"] = pd.to_datetime(df["fecha_cita"], errors="coerce").dt.weekday.astype(float)
+    x["Especialidad"] = df["especialidad"].astype(str)
+    x["AusenciasPrevias"] = pd.to_numeric(df["ausencias_previas"], errors="coerce")
+    canal = df["canal_recordatorio"] if "canal_recordatorio" in df.columns else "ninguno"
+    x["CanalRecordatorio"] = canal.fillna("ninguno").astype(str)
+
+    # Inversión de la etiqueta: y=1 → no-show (igual que el dataset Kaggle).
+    y = (~df["asistio"].astype(bool)).astype(int)
+    return x[FEATURES], y
 
 
 # Features del modelo = campos del PredictRequest (contrato ia-api.yaml v1.2.0)

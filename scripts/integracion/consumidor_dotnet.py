@@ -7,6 +7,7 @@ al microservicio de IA según el contrato `ia-api.yaml`:
 - POST /predict         (JWT M2M service-ia)   -> score + banda + clase de no-show
 - POST /nlp/sintomas    (JWT M2M service-ia)   -> entidades de síntomas
 - POST /nlp/resumen     (JWT M2M service-ia)   -> ficha clínica preliminar
+- POST /feedback/asistencia (JWT M2M service-ia) -> registrar desenlace real (HU-IA-02)
 
 Valida las respuestas contra el contrato (campos, tipos, enums y coherencias) e
 informa como lo haría una integración real. Ejecutar con el servicio ya levantado:
@@ -147,8 +148,43 @@ def paso_nlp_resumen(client: httpx.Client) -> None:
     print()
 
 
+def paso_feedback(client: httpx.Client) -> None:
+    print("PASO 5 — POST /feedback/asistencia (desenlace real, JWT service-ia)")
+    payload = {
+        "cita_id": "550e8400-e29b-41d4-a716-446655440000",
+        "asistio": False,
+        "fecha_cita": "2026-10-05",
+        "edad": 34,
+        "genero": "F",
+        "dias_espera": 5,
+        "especialidad": "psicologia",
+        "ausencias_previas": 1,
+        "canal_recordatorio": "whatsapp",
+        "score_riesgo": 0.63,
+    }
+    r = client.post("/feedback/asistencia", json=payload, headers=auth_headers())
+    _checket("status 200", r.status_code == 200, f"recibido {r.status_code}")
+    body = r.json()
+    _checket("cita_id espejado", body.get("cita_id") == payload["cita_id"])
+    _checket("asistio espejado", body.get("asistio") is False)
+    total = body.get("registros_totales")
+    _checket("registros_totales >= 1", isinstance(total, int) and total >= 1, f"total={total}")
+
+    # Idempotencia (upsert por cita_id): reenviar el mismo desenlace no duplica registros.
+    r2 = client.post("/feedback/asistencia", json=payload, headers=auth_headers())
+    total2 = r2.json().get("registros_totales")
+    _checket("upsert idempotente por cita_id", total2 == total, f"{total} -> {total2}")
+
+    r3 = client.post("/feedback/asistencia", json={"asistio": True}, headers=auth_headers())
+    _checket("payload incompleto -> 422", r3.status_code == 422, f"recibido {r3.status_code}")
+    r4 = client.post("/feedback/asistencia", json=payload)
+    _checket("sin token -> 401", r4.status_code == 401, f"recibido {r4.status_code}")
+    print(f"    -> {body}")
+    print()
+
+
 def paso_errores(client: httpx.Client) -> None:
-    print("PASO 5 — Manejo de errores HTTP (como lo ve .NET)")
+    print("PASO 6 — Manejo de errores HTTP (como lo ve .NET)")
     r = client.post(
         "/predict",
         json={
@@ -188,6 +224,7 @@ def main() -> None:
         paso_predict(client)
         paso_nlp_sintomas(client)
         paso_nlp_resumen(client)
+        paso_feedback(client)
         paso_errores(client)
     print("\nIntegración IA ↔ .NET OK: el microservicio responde según ia-api.yaml.")
 

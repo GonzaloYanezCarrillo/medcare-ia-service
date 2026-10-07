@@ -21,7 +21,7 @@ class Settings(BaseSettings):
     )
 
     app_name: str = "MedCare IA — API Microservicio IA"
-    app_version: str = "1.3.0"
+    app_version: str = "1.4.0"
     app_env: str = "development"
 
     api_prefix: str = ""
@@ -32,6 +32,10 @@ class Settings(BaseSettings):
 
     # Dataset Kaggle (C0-3 / C1-1)
     dataset_path: str = "data/KaggleV2-May-2016.csv"
+
+    # Feedback de asistencia real (C4-1 / HU-IA-02): JSONL append-upsert por cita_id.
+    # Solo features + etiqueta (RNF-SEG-03: sin contenido clínico).
+    feedback_path: str = "data/feedback/asistencia.jsonl"
 
     # Integración con la API Core .NET (Sprint 2+)
     core_api_url: str | None = None

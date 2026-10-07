@@ -3,7 +3,7 @@
 Microservicio de IA de MedCare AI (Track C, Dev C).
 Stack: **Python 3.11 · FastAPI · Uvicorn · Pydantic · Scikit-Learn · spaCy/NLTK · joblib**.
 
-Contrato de referencia: `medcare-contracts/ia-api.yaml` (versión 1.3.0, repo `pabloordenes/medcare-contracts`).
+Contrato de referencia: `medcare-contracts/ia-api.yaml` (versión 1.4.0, repo `pabloordenes/medcare-contracts`).
 
 ## Estructura del proyecto
 
@@ -13,11 +13,11 @@ ia_service/
 │   ├── main.py               # App FastAPI (punto de entrada)
 │   ├── config.py             # Configuración (pydantic-settings + .env)
 │   ├── api/
-│   │   └── routers/          # health.py · nlp.py · predict.py
-│   ├── schemas/              # Models Pydantic (health.py · nlp.py · predict.py)
-│   ├── services/             # Lógica de negocio + model registry
-│   └── training/             # ETL, feature engineering y entrenamiento (C1-1/C1-2)
-├── models/                   # Artefactos .joblib (no versionado)
+│   │   └── routers/          # health.py · nlp.py · predict.py · feedback.py
+│   ├── schemas/              # Models Pydantic (health · nlp · predict · feedback)
+│   ├── services/             # Lógica de negocio + model registry + feedback store
+│   └── training/             # ETL, feature engineering, entrenamiento y retrain (C1-1/C1-2/C4-1)
+├── models/                   # Artefactos .joblib + versions/ y latest.json (no versionado)
 ├── data/                     # Dataset Kaggle + CHECKLIST (csv no versionado)
 ├── tests/                    # Pytest + TestClient
 ├── .github/workflows/ci.yml  # CI: ruff (lint/format) + pytest
@@ -27,14 +27,15 @@ ia_service/
 └── requirements*.txt
 ```
 
-## Endpoints (contrato v1.3.0)
+## Endpoints (contrato v1.4.0)
 
-| Método | Ruta            | Auth M2M  | Descripción                                        |
-|--------|-----------------|-----------|----------------------------------------------------|
-| GET    | `/health`       | Pública   | Health check (status, modelo cargado, versión)     |
-| POST   | `/nlp/sintomas` | `service-ia` | Extraer entidades de síntomas desde texto libre  |
-| POST   | `/nlp/resumen`  | `service-ia` | Resumen clínico preliminar + entidades (HU-NLP-03) |
-| POST   | `/predict`      | `service-ia` | Score, banda y clase de riesgo de no-show         |
+| Método | Ruta                  | Auth M2M  | Descripción                                        |
+|--------|-----------------------|-----------|----------------------------------------------------|
+| GET    | `/health`             | Pública   | Health check (status, modelo cargado, versión)     |
+| POST   | `/nlp/sintomas`       | `service-ia` | Extraer entidades de síntomas desde texto libre  |
+| POST   | `/nlp/resumen`        | `service-ia` | Resumen clínico preliminar + entidades (HU-NLP-03) |
+| POST   | `/predict`            | `service-ia` | Score, banda y clase de riesgo de no-show         |
+| POST   | `/feedback/asistencia`| `service-ia` | Registrar asistencia real de una cita (HU-IA-02)  |
 
 El contrato `ia-api.yaml` declara `bearerAuth` global. Todas las rutas excepto
 `/health` exigen un **JWT M2M** con rol `service-ia` (firma RS256 verificada contra el
@@ -105,13 +106,34 @@ pytest --cov=app
 - **C2-2 ✅** NLP con spaCy (`es_core_news_sm`) integrado en `nlp_service` como motor de análisis: carga diferida y cacheada, y matching de severidad/urgencia por **lemas** (detecta variaciones morfológicas que la heurística cruda no veía, p.ej. `intensos`, `convulsiones`). Los endpoints `/nlp/*` mantienen el contrato v1.3.0. Extracción fina de entidades y resumen clínico → **C3-1**.
 - **C5-1 ✅ (impl.)** Auth M2M: `app/services/auth.py` protege `/predict` y `/nlp/*` con JWT RS256 y rol `service-ia` (JWKS de Supabase en prod, `JWT_PUBLIC_KEY_PEM` en dev/test; fail-closed → `503` si no hay claves configuradas). Rutas sin token → `401`; rol incorrecto → `403`; `/health` sigue pública. Tablero lo mantiene en Sprint 5 (no se re-planificó).
 - **C3-1 ✅** Resumen clínico preliminar por cita: `POST /nlp/resumen` devuelve una ficha estructurada (`Ficha clínica preliminar — Cita {id}`) con Síntomas, Duración, Medicamentos y Alergias detectados, más Urgencia sugerida. Se extraen entidades `medicamento` y `alergia` (ya declaradas en el tipo del contrato) sin romper el schema HTTP. Resta (post-MVP): integrar contexto de cita real y validación clínica.
+- **C4-1 ✅ (impl.)** Feedback y retrain (HU-IA-02): `POST /feedback/asistencia` (rol `service-ia`) persiste el desenlace real en `data/feedback/asistencia.jsonl` (upsert idempotente por `cita_id`, whitelist RNF-SEG-03: solo features + etiqueta). `python -m app.training.train --feedback` concatena el feedback al dataset Kaggle, aplica un **gate de no-degradación** (AUC y sensibilidad ≥ línea base − 0.01) y, solo si promueve, versiona el modelo con **semver propio** (independiente de `app_version`; bump menor con feedback, patch en reentrenamientos) archivándolo en `models/versions/<v>/` con puntero `latest.json` y comparativo `metrics.json`. Recarga del modelo: **offline + reinicio** (sin hot-reload).
 
 Nota: el modelo actual se entrena con el dataset Kaggle como base de ejercicio; `WaitingDays` se deriva de `ScheduledDay`/`AppointmentDay`. Al pasar a producción se reentrenará con datos reales que poblarán `Especialidad`, `AusenciasPrevias` y `CanalRecordatorio` (sin cambios de código).
 
 ## Entrenamiento
 
 ```bash
+# Modelo base (solo dataset Kaggle)
 python -m app.training.train
+
+# Reentrenamiento con feedback real (HU-IA-02) + gate de no-degradación
+python -m app.training.train --feedback
 ```
 
-Persiste el artefacto en `models/model.joblib` con pipeline, features y métricas.
+Persiste el artefacto en `models/model.joblib` con pipeline, features y métricas, y además:
+
+- **Versión del modelo** (`model_version`): semver propio del modelo, **independiente** de
+  `app_version` de la API. Sin artefacto previo → `1.0.0`; reentrenamiento con feedback
+  (datos nuevos) → bump menor; reentrenamiento del mismo dataset → bump patch.
+- **Linaje**: `parent_version` y `trained_at` en el artefacto; copia archivada en
+  `models/versions/<v>/model.joblib` y puntero `models/latest.json`.
+- **Gate de no-degradación** (solo con `--feedback`): el candidato se promueve si
+  AUC-ROC y sensibilidad no caen más de `--epsilon` (default `0.01`) por debajo del
+  artefacto vigente. Si falla, **no** se sobrescribe el modelo activo y el CLI sale con
+  código `1`.
+- **Comparativo** `models/metrics.json`: baseline vs. reentrenado (métricas y delta) y
+  resultado del gate, también cuando el candidato es rechazado (auditoría).
+
+El feedback se envía desde .NET con `POST /feedback/asistencia` (rol `service-ia`) y se
+almacena en `data/feedback/asistencia.jsonl` (upsert por `cita_id`). La recarga del modelo
+en el servicio es **offline + reinicio** (sin endpoint de hot-reload).

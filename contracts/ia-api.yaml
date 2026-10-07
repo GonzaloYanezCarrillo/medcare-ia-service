@@ -10,7 +10,7 @@ info:
     Roles del Servicio:
     1. Servidor REST: Expone endpoints para Procesamiento de Lenguaje Natural (NLP) en tiempo real durante el agendamiento.
     2. Tarea Programada (Cronjob): Se ejecuta diariamente, consulta a .NET por las citas de las próximas 48 horas, predice el riesgo (Scikit-Learn) y devuelve los resultados a .NET vía HTTP POST.
-  version: 1.3.0
+  version: 1.4.0
 
 security:
   - bearerAuth: []
@@ -95,6 +95,35 @@ components:
           items:
             $ref: '#/components/schemas/EntidadSintoma'
         urgencia_sugerida: { type: string, enum: [baja, media, alta], description: "Urgencia preliminar derivada de los síntomas" }
+
+    # ── Feedback de asistencia real (HU-IA-02 / C4-1) ────────
+    FeedbackAsistenciaRequest:
+      type: object
+      description: |
+        Desenlace real de una cita con el snapshot de features con que se predijo su riesgo.
+        Consumido por .NET (M2M) tras registrar la asistencia para alimentar el
+        reentrenamiento del modelo. No incluye contenido clínico ni datos personales
+        identificables más allá del cita_id (RNF-SEG-03).
+      required: [cita_id, asistio, fecha_cita, edad, genero, dias_espera, especialidad, ausencias_previas]
+      properties:
+        cita_id: { type: string, format: uuid, description: "Cita a la que corresponde el desenlace" }
+        asistio: { type: boolean, description: "true si el paciente asistió; false = no-show (etiqueta y del reentrenamiento)" }
+        fecha_cita: { type: string, format: date, description: "Fecha de la cita (YYYY-MM-DD); permite derivar Weekday en entrenamiento" }
+        edad: { type: integer, minimum: 0, description: "Edad del paciente al momento de la cita" }
+        genero: { type: string, enum: [M, F, Otro] }
+        dias_espera: { type: integer, minimum: 0, description: "Días entre agendamiento y cita (WaitingDays) al momento de la predicción" }
+        especialidad: { type: string, examples: [psicologia, dental, veterinaria, medicina_general] }
+        ausencias_previas: { type: integer, minimum: 0, description: "Inasistencias previas del paciente (anteriores a esta cita)" }
+        canal_recordatorio: { type: string, enum: [email, whatsapp, ninguno], default: ninguno, description: "Canal de recordatorio programado (opcional)" }
+        score_riesgo: { type: number, format: float, minimum: 0, maximum: 1, description: "Score que predijo el modelo para esta cita (opcional; habilita la métrica de precisión de la banda Alto)" }
+
+    FeedbackAsistenciaResponse:
+      type: object
+      required: [cita_id, asistio, registros_totales]
+      properties:
+        cita_id: { type: string, format: uuid }
+        asistio: { type: boolean }
+        registros_totales: { type: integer, description: "Total de registros de feedback acumulados" }
 
 paths:
   /health:
@@ -190,5 +219,42 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PredictResponse'
+        '422':
+          description: Entrada inválida (validación Pydantic)
+
+  /feedback/asistencia:
+    post:
+      tags: [Feedback]
+      summary: Registrar desenlace real de una cita (feedback HU-IA-02)
+      description: |
+        Consumido síncronamente por .NET (M2M) cuando la recepción registra la asistencia
+        real de una cita. Aporta la etiqueta (asistio) y el snapshot de features con que se
+        predijo el riesgo, para alimentar el reentrenamiento del modelo (C4-1/HU-IA-02).
+        Idempotente: reenviar la misma cita sobrescribe el registro anterior.
+      x-roles: [service-ia]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FeedbackAsistenciaRequest'
+            example:
+              cita_id: "550e8400-e29b-41d4-a716-446655440000"
+              asistio: false
+              fecha_cita: "2026-10-05"
+              edad: 34
+              genero: "F"
+              dias_espera: 5
+              especialidad: "psicologia"
+              ausencias_previas: 1
+              canal_recordatorio: "whatsapp"
+              score_riesgo: 0.63
+      responses:
+        '200':
+          description: Desenlace registrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FeedbackAsistenciaResponse'
         '422':
           description: Entrada inválida (validación Pydantic)
