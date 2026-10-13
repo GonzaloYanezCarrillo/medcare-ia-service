@@ -18,7 +18,7 @@ ENV/
 !.env.example
 
 # Modelos y datos (grandes, no versionar)
-models/*.joblib
+
 models/*.pkl
 models/versions/
 models/latest.json
