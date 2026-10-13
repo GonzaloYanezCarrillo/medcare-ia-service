@@ -54,8 +54,11 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Generar artefacto sintético para el build prod
-        run: python scripts/ci_dummy_artifact.py
+      - name: Generar artefacto sintético para el build prod (si no hay modelo versionado)
+        run: |
+          if [ ! -f models/model.joblib ]; then
+            python scripts/ci_dummy_artifact.py
+          fi
 
       - name: Build imagen dev
         run: docker build -f Dockerfile -t medcare-ia:dev .
