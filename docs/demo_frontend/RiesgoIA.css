@@ -1,0 +1,276 @@
+.ContenedorPrincipal-RiesgoIA{
+    width: 100%;
+    height: 100dvh;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+}
+
+.ContenedorTitulo-RiesgoIA{
+    width: 100%;
+    height: 15dvh;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding-left: 40px;
+    box-sizing: border-box;
+    color: #1E9CF1;
+}
+
+.Badge-Simulacion-RiesgoIA{
+    background-color: #FEF3C7;
+    color: #B45309;
+    border: 1px solid #FCD34D;
+    border-radius: 999px;
+    padding: 4px 12px;
+    font-size: 0.75rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.ContenedorContenido-RiesgoIA{
+    width: 100%;
+    height: 85dvh;
+    padding: 10px 50px 40px;
+    box-sizing: border-box;
+    overflow-y: auto;
+}
+
+.Meta-RiesgoIA{
+    margin: 0 0 20px;
+    color: #6B7280;
+    font-size: 0.9rem;
+}
+
+.Kpis-RiesgoIA{
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 20px;
+    margin-bottom: 25px;
+}
+
+.Kpi-RiesgoIA{
+    background-color: #F7F8F8;
+    border: 1px solid #E1EAEF;
+    border-radius: 12px;
+    padding: 18px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.KpiValor-RiesgoIA{
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: #1E9CF1;
+}
+
+.KpiEtiqueta-RiesgoIA,
+.Kpi-RiesgoIA .KpiEtiqueta-RiesgoIA{
+    color: #6B7280;
+    font-size: 0.9rem;
+}
+
+.Bandas-RiesgoIA{
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-bottom: 25px;
+}
+
+.Chip-Banda-RiesgoIA{
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-radius: 10px;
+    padding: 12px 18px;
+    border: 1px solid #E1EAEF;
+    background-color: #F7F8F8;
+}
+
+.Chip-Banda-RiesgoIA.Bajo{
+    border-color: #16A34A33;
+}
+
+.Chip-Banda-RiesgoIA.Medio{
+    border-color: #F59E0B33;
+}
+
+.Chip-Banda-RiesgoIA.Alto{
+    border-color: #DC262633;
+}
+
+.ChipCantidad-RiesgoIA{
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #333;
+}
+
+.ChipEtiqueta-RiesgoIA{
+    color: #6B7280;
+    font-size: 0.9rem;
+}
+
+.Filtros-RiesgoIA{
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.BtnFiltro-RiesgoIA{
+    border: 1px solid #E1EAEF;
+    background-color: #FFFFFF;
+    color: #6B7280;
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-size: 0.85rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.BtnFiltro-RiesgoIA:hover{
+    background-color: #F7F8F8;
+}
+
+.BtnFiltro-RiesgoIA.Activo{
+    background-color: #1E9CF1;
+    border-color: #1E9CF1;
+    color: #FFFFFF;
+}
+
+.TablaWrapper-RiesgoIA{
+    width: 100%;
+    border: 1px solid #E1EAEF;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.Tabla-RiesgoIA{
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+}
+
+.Tabla-RiesgoIA thead{
+    background-color: #F7F8F8;
+}
+
+.Tabla-RiesgoIA th{
+    text-align: left;
+    padding: 12px 16px;
+    color: #6B7280;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+}
+
+.Tabla-RiesgoIA td{
+    padding: 12px 16px;
+    color: #333;
+    border-top: 1px solid #EEF2F5;
+}
+
+.Tabla-RiesgoIA tbody tr:hover{
+    background-color: #FBFDFE;
+}
+
+.CeldaId-RiesgoIA{
+    color: #9F9F9F;
+    font-family: monospace;
+}
+
+.TablaVacia-RiesgoIA{
+    text-align: center;
+    color: #979797;
+}
+
+.EtiquetaReal-RiesgoIA{
+    display: inline-block;
+    border-radius: 6px;
+    padding: 2px 10px;
+    font-size: 0.8rem;
+    font-weight: bold;
+}
+
+.EtiquetaReal-RiesgoIA.Si{
+    background-color: #FEE2E2;
+    color: #B91C1C;
+}
+
+.EtiquetaReal-RiesgoIA.No{
+    background-color: #DCFCE7;
+    color: #15803D;
+}
+
+.BarraRiesgo-RiesgoIA{
+    position: relative;
+    width: 140px;
+    height: 20px;
+    background-color: #EEF2F5;
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+.BarraRiesgoRelleno-RiesgoIA{
+    position: absolute;
+    inset: 0 auto 0 0;
+    height: 100%;
+}
+
+.BarraRiesgoRelleno-RiesgoIA.Bajo{
+    background-color: #16A34A;
+}
+
+.BarraRiesgoRelleno-RiesgoIA.Medio{
+    background-color: #F59E0B;
+}
+
+.BarraRiesgoRelleno-RiesgoIA.Alto{
+    background-color: #DC2626;
+}
+
+.BarraRiesgoValor-RiesgoIA{
+    position: relative;
+    z-index: 1;
+    display: block;
+    text-align: center;
+    line-height: 20px;
+    font-size: 0.75rem;
+    font-weight: bold;
+    color: #333;
+}
+
+.Pastilla-RiesgoIA{
+    display: inline-block;
+    border-radius: 999px;
+    padding: 3px 12px;
+    font-size: 0.8rem;
+    font-weight: bold;
+    color: #FFFFFF;
+}
+
+.Pastilla-RiesgoIA.Bajo{
+    background-color: #16A34A;
+}
+
+.Pastilla-RiesgoIA.Medio{
+    background-color: #F59E0B;
+}
+
+.Pastilla-RiesgoIA.Alto{
+    background-color: #DC2626;
+}
+
+.Estado-RiesgoIA{
+    margin: auto;
+    color: #6B7280;
+    font-size: 1rem;
+}
+
+.Estado-RiesgoIA.Error{
+    color: #DC2626;
+    font-weight: bold;
+}

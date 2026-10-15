@@ -1,0 +1,1310 @@
+diff --git a/public/demo_citas.json b/public/demo_citas.json
+new file mode 100644
+index 0000000..f23cc6e
+--- /dev/null
++++ b/public/demo_citas.json
+@@ -0,0 +1,757 @@
++{
++  "generado_en": "2026-10-15T17:29:46+00:00",
++  "simulacion": true,
++  "fuente": {
++    "dataset": "KaggleV2-May-2016.csv",
++    "n_total": 60,
++    "nota": "Muestra del dataset Kaggle; features Especialidad/Ausencias/Canal no existen en el dataset y usan los defaults del modelo."
++  },
++  "modelo": {
++    "version": "1.3.0",
++    "auc_test": 0.7174,
++    "sensibilidad": 0.7829,
++    "especificidad": 0.549
++  },
++  "umbrales_banda": {
++    "Bajo": "< 0.25",
++    "Medio": "0.25 - 0.50",
++    "Alto": "> 0.50"
++  },
++  "resumen": {
++    "n_citas": 60,
++    "tasa_inasistencia_real": 0.2,
++    "tasa_inasistencia_predicha": 0.4121,
++    "auc_muestra": 0.7517,
++    "por_banda": {
++      "Bajo": 21,
++      "Medio": 12,
++      "Alto": 27
++    },
++    "por_clase": {
++      "asiste": 33,
++      "no_asiste": 27
++    }
++  },
++  "citas": [
++    {
++      "cita_id": "demo-0001",
++      "edad": 56,
++      "genero": "F",
++      "dias_espera": 41,
++      "weekday": 0,
++      "dia_semana": "Lunes",
++      "inasistencia_real": 1,
++      "score_riesgo": 0.7914,
++      "banda_riesgo": "Alto",
++      "clase": "no_asiste"
++    },
++    {
++      "cita_id": "demo-0002",
++      "edad": 19,
++      "genero": "F",
++      "dias_espera": 0,
++      "weekday": 0,
++      "dia_semana": "Lunes",
++      "inasistencia_real": 1,
++      "score_riesgo": 0.2262,
++      "banda_riesgo": "Bajo",
++      "clase": "asiste"
++    },
++    {
++      "cita_id": "demo-0003",
++      "edad": 35,
++      "genero": "F",
++      "dias_espera": 0,
++      "weekday": 4,
++      "dia_semana": "Viernes",
++      "inasistencia_real": 0,
++      "score_riesgo": 0.0506,
++      "banda_riesgo": "Bajo",
++      "clase": "asiste"
++    },
++    {
++      "cita_id": "demo-0004",
++      "edad": 15,
++      "genero": "F",
++      "dias_espera": 0,
++      "weekday": 2,
++      "dia_semana": "Miércoles",
++      "inasistencia_real": 0,
++      "score_riesgo": 0.3695,
++      "banda_riesgo": "Medio",
++      "clase": "asiste"
++    },
++    {
++      "cita_id": "demo-0005",
++      "edad": 21,
++      "genero": "F",
++      "dias_espera": 8,
++      "weekday": 3,
++      "dia_semana": "Jueves",
++      "inasistencia_real": 0,
++      "score_riesgo": 0.6361,
++      "banda_riesgo": "Alto",
++      "clase": "no_asiste"
++    },
++    {
++      "cita_id": "demo-0006",
++      "edad": 60,
++      "genero": "F",
++      "dias_espera": 0,
++      "weekday": 1,
++      "dia_semana": "Martes",
++      "inasistencia_real": 0,
++      "score_riesgo": 0.1627,
++      "banda_riesgo": "Bajo",
++      "clase": "asiste"
++    },
++    {
++      "cita_id": "demo-0007",
++      "edad": 49,
++      "genero": "M",
++      "dias_espera": 2,
++      "weekday": 4,
++      "dia_semana": "Viernes",
++      "inasistencia_real": 0,
++      "score_riesgo": 0.4091,
++      "banda_riesgo": "Medio",
++      "clase": "asiste"
++    },
++    {
++      "cita_id": "demo-0008",
++      "edad": 37,
++      "genero": "F",
++      "dias_espera": 0,
++      "weekday": 2,
++      "dia_semana": "Miércoles",
++      "inasistencia_real": 0,
++      "score_riesgo": 0.09,
++      "banda_riesgo": "Bajo",
++      "clase": "asiste"
++    },
++    {
++      "cita_id": "demo-0009",
++      "edad": 48,
++      "genero": "M",
++      "dias_espera": 0,
++      "weekday": 1,
++      "dia_semana": "Martes",
++      "inasistencia_real": 0,
++      "score_riesgo": 0.152,
++      "banda_riesgo": "Bajo",
++      "clase": "asiste"
++    },
++    {
++      "cita_id": "demo-0010",
++      "edad": 69,
++      "genero": "F",
++      "dias_espera": 56,
++      "weekday": 1,
++      "dia_semana": "Martes",
++      "inasistencia_real": 0,
++      "score_riesgo": 0.4797,
++      "banda_riesgo": "Medio",
++      "clase": "asiste"
++    },
++    {
++      "cita_id": "demo-0011",
++      "edad": 52,
++      "genero": "F",
++      "dias_espera": 0,
++      "weekday": 2,
++      "dia_semana": "Miércoles",
++      "inasistencia_real": 0,
++      "score_riesgo": 0.1352,
++      "banda_riesgo": "Bajo",
++      "clase": "asiste"
++    },
++    {
++      "cita_id": "demo-0012",
++      "edad": 0,
++      "genero": "F",
++      "dias_espera": 14,
++      "weekday": 0,
++      "dia_semana": "Lunes",
++      "inasistencia_real": 0,
++      "score_riesgo": 0.7873,
++      "banda_riesgo": "Alto",
++      "clase": "no_asiste"
++    },
++    {
++      "cita_id": "demo-0013",
++      "edad": 77,
++      "genero": "F",
++      "dias_espera": 5,
++      "weekday": 2,
++      "dia_semana": "Miércoles",
++      "inasistencia_real": 0,
++      "score_riesgo": 0.4436,
++      "banda_riesgo": "Medio",
++      "clase": "asiste"
++    },
++    {
++      "cita_id": "demo-0014",
++      "edad": 21,
++      "genero": "M",
++      "dias_espera": 7,
++      "weekday": 3,
++      "dia_semana": "Jueves",
++      "inasistencia_real": 1,
++      "score_riesgo": 0.6496,
++      "banda_riesgo": "Alto",
++      "clase": "no_asiste"
++    },
++    {
++      "cita_id": "demo-0015",
++      "edad": 10,
++      "genero": "M",
++      "dias_espera": 0,
++      "weekday": 0,
++      "dia_semana": "Lunes",
++      "inasistencia_real": 0,
++      "score_riesgo": 0.0057,
++      "banda_riesgo": "Bajo",
++      "clase": "asiste"
++    },
++    {
++      "cita_id": "demo-0016",
++      "edad": 63,
++      "genero": "F",
++      "dias_espera": 1,
++      "weekday": 3,
++      "dia_semana": "Jueves",
++      "inasistencia_real": 0,
++      "score_riesgo": 0.4068,
++      "banda_riesgo": "Medio",
++      "clase": "asiste"
++    },
++    {
++      "cita_id": "demo-0017",
++      "edad": 16,
++      "genero": "F",
++      "dias_espera": 34,
++      "weekday": 3,
++      "dia_semana": "Jueves",
++      "inasistencia_real": 1,
++      "score_riesgo": 0.7299,
++      "banda_riesgo": "Alto",
++      "clase": "no_asiste"
++    },
++    {
++      "cita_id": "demo-0018",
++      "edad": 43,
++      "genero": "M",
++      "dias_espera": 37,
++      "weekday": 2,
++      "dia_semana": "Miércoles",
++      "inasistencia_real": 1,
++      "score_riesgo": 0.748,
++      "banda_riesgo": "Alto",
++      "clase": "no_asiste"
++    },
++    {
++      "cita_id": "demo-0019",
++      "edad": 37,
++      "genero": "F",
++      "dias_espera": 7,
++      "weekday": 2,
++      "dia_semana": "Miércoles",
++      "inasistencia_real": 0,
++      "score_riesgo": 0.5655,
++      "banda_riesgo": "Alto",
++      "clase": "no_asiste"
++    },
++    {
++      "cita_id": "demo-0020",
++      "edad": 29,
++      "genero": "M",
++      "dias_espera": 31,
++      "weekday": 0,
++      "dia_semana": "Lunes",
++      "inasistencia_real": 1,
++      "score_riesgo": 0.7329,
++      "banda_riesgo": "Alto",
++      "clase": "no_asiste"
++    },
++    {
++      "cita_id": "demo-0021",
++      "edad": 1,
++      "genero": "M",
++      "dias_espera": 14,
++      "weekday": 0,
++      "dia_semana": "Lunes",
++      "inasistencia_real": 0,
++      "score_riesgo": 0.6728,
++      "banda_riesgo": "Alto",
++      "clase": "no_asiste"
++    },
++    {
++      "cita_id": "demo-0022",
++      "edad": 40,
++      "genero": "F",
++      "dias_espera": 0,
++      "weekday": 4,
++      "dia_semana": "Viernes",
++      "inasistencia_real": 0,
++      "score_riesgo": 0.1193,
++      "banda_riesgo": "Bajo",
++      "clase": "asiste"
++    },
++    {
++      "cita_id": "demo-0023",
++      "edad": 51,
++      "genero": "F",
++      "dias_espera": 19,
++      "weekday": 0,
++      "dia_semana": "Lunes",
++      "inasistencia_real": 0,
++      "score_riesgo": 0.5938,
++      "banda_riesgo": "Alto",
++      "clase": "no_asiste"
++    },
++    {
++      "cita_id": "demo-0024",
++      "edad": 37,
++      "genero": "F",
++      "dias_espera": 0,
++      "weekday": 3,
++      "dia_semana": "Jueves",
++      "inasistencia_real": 0,
++      "score_riesgo": 0.0508,
++      "banda_riesgo": "Bajo",
++      "clase": "asiste"
++    },
++    {
++      "cita_id": "demo-0025",
++      "edad": 57,
++      "genero": "M",
++      "dias_espera": 7,
++      "weekday": 1,
++      "dia_semana": "Martes",
++      "inasistencia_real": 0,
++      "score_riesgo": 0.4091,
++      "banda_riesgo": "Medio",
++      "clase": "asiste"
++    },
++    {
++      "cita_id": "demo-0026",
++      "edad": 30,
++      "genero": "F",
++      "dias_espera": 0,
++      "weekday": 0,
++      "dia_semana": "Lunes",
++      "inasistencia_real": 0,
++      "score_riesgo": 0.1589,
++      "banda_riesgo": "Bajo",
++      "clase": "asiste"
++    },
++    {
++      "cita_id": "demo-0027",
++      "edad": 80,
++      "genero": "M",
++      "dias_espera": 0,
++      "weekday": 0,
++      "dia_semana": "Lunes",
++      "inasistencia_real": 0,
++      "score_riesgo": 0.0191,
++      "banda_riesgo": "Bajo",
++      "clase": "asiste"
++    },
++    {
++      "cita_id": "demo-0028",
++      "edad": 31,
++      "genero": "F",
++      "dias_espera": 3,
++      "weekday": 0,
++      "dia_semana": "Lunes",
++      "inasistencia_real": 0,
++      "score_riesgo": 0.6513,
++      "banda_riesgo": "Alto",
++      "clase": "no_asiste"
++    },
++    {
++      "cita_id": "demo-0029",
++      "edad": 68,
++      "genero": "M",
++      "dias_espera": 4,
++      "weekday": 1,
++      "dia_semana": "Martes",
++      "inasistencia_real": 1,
++      "score_riesgo": 0.4443,
++      "banda_riesgo": "Medio",
++      "clase": "asiste"
++    },
++    {
++      "cita_id": "demo-0030",
++      "edad": 59,
++      "genero": "F",
++      "dias_espera": 2,
++      "weekday": 3,
++      "dia_semana": "Jueves",
++      "inasistencia_real": 0,
++      "score_riesgo": 0.5002,
++      "banda_riesgo": "Alto",
++      "clase": "no_asiste"
++    },
++    {
++      "cita_id": "demo-0031",
++      "edad": 2,
++      "genero": "M",
++      "dias_espera": 0,
++      "weekday": 3,
++      "dia_semana": "Jueves",
++      "inasistencia_real": 0,
++      "score_riesgo": 0.2058,
++      "banda_riesgo": "Bajo",
++      "clase": "asiste"
++    },
++    {
++      "cita_id": "demo-0032",
++      "edad": 66,
++      "genero": "F",
++      "dias_espera": 4,
++      "weekday": 1,
++      "dia_semana": "Martes",
++      "inasistencia_real": 0,
++      "score_riesgo": 0.5152,
++      "banda_riesgo": "Alto",
++      "clase": "no_asiste"
++    },
++    {
++      "cita_id": "demo-0033",
++      "edad": 77,
++      "genero": "F",
++      "dias_espera": 0,
++      "weekday": 1,
++      "dia_semana": "Martes",
++      "inasistencia_real": 0,
++      "score_riesgo": 0.0106,
++      "banda_riesgo": "Bajo",
++      "clase": "asiste"
++    },
++    {
++      "cita_id": "demo-0034",
++      "edad": 21,
++      "genero": "F",
++      "dias_espera": 27,
++      "weekday": 1,
++      "dia_semana": "Martes",
++      "inasistencia_real": 0,
++      "score_riesgo": 0.7022,
++      "banda_riesgo": "Alto",
++      "clase": "no_asiste"
++    },
++    {
++      "cita_id": "demo-0035",
++      "edad": 0,
++      "genero": "M",
++      "dias_espera": 12,
++      "weekday": 1,
++      "dia_semana": "Martes",
++      "inasistencia_real": 1,
++      "score_riesgo": 0.5598,
++      "banda_riesgo": "Alto",
++      "clase": "no_asiste"
++    },
++    {
++      "cita_id": "demo-0036",
++      "edad": 82,
++      "genero": "M",
++      "dias_espera": 7,
++      "weekday": 2,
++      "dia_semana": "Miércoles",
++      "inasistencia_real": 0,
++      "score_riesgo": 0.4468,
++      "banda_riesgo": "Medio",
++      "clase": "asiste"
++    },
++    {
++      "cita_id": "demo-0037",
++      "edad": 92,
++      "genero": "F",
++      "dias_espera": 0,
++      "weekday": 2,
++      "dia_semana": "Miércoles",
++      "inasistencia_real": 0,
++      "score_riesgo": 0.27,
++      "banda_riesgo": "Medio",
++      "clase": "asiste"
++    },
++    {
++      "cita_id": "demo-0038",
++      "edad": 42,
++      "genero": "F",
++      "dias_espera": 35,
++      "weekday": 3,
++      "dia_semana": "Jueves",
++      "inasistencia_real": 0,
++      "score_riesgo": 0.624,
++      "banda_riesgo": "Alto",
++      "clase": "no_asiste"
++    },
++    {
++      "cita_id": "demo-0039",
++      "edad": 25,
++      "genero": "M",
++      "dias_espera": 27,
++      "weekday": 2,
++      "dia_semana": "Miércoles",
++      "inasistencia_real": 0,
++      "score_riesgo": 0.7385,
++      "banda_riesgo": "Alto",
++      "clase": "no_asiste"
++    },
++    {
++      "cita_id": "demo-0040",
++      "edad": 36,
++      "genero": "M",
++      "dias_espera": 4,
++      "weekday": 0,
++      "dia_semana": "Lunes",
++      "inasistencia_real": 0,
++      "score_riesgo": 0.5895,
++      "banda_riesgo": "Alto",
++      "clase": "no_asiste"
++    },
++    {
++      "cita_id": "demo-0041",
++      "edad": 1,
++      "genero": "M",
++      "dias_espera": 13,
++      "weekday": 1,
++      "dia_semana": "Martes",
++      "inasistencia_real": 0,
++      "score_riesgo": 0.7176,
++      "banda_riesgo": "Alto",
++      "clase": "no_asiste"
++    },
++    {
++      "cita_id": "demo-0042",
++      "edad": 59,
++      "genero": "F",
++      "dias_espera": 0,
++      "weekday": 1,
++      "dia_semana": "Martes",
++      "inasistencia_real": 1,
++      "score_riesgo": 0.2498,
++      "banda_riesgo": "Bajo",
++      "clase": "asiste"
++    },
++    {
++      "cita_id": "demo-0043",
++      "edad": 32,
++      "genero": "F",
++      "dias_espera": 0,
++      "weekday": 2,
++      "dia_semana": "Miércoles",
++      "inasistencia_real": 0,
++      "score_riesgo": 0.0634,
++      "banda_riesgo": "Bajo",
++      "clase": "asiste"
++    },
++    {
++      "cita_id": "demo-0044",
++      "edad": 0,
++      "genero": "M",
++      "dias_espera": 21,
++      "weekday": 0,
++      "dia_semana": "Lunes",
++      "inasistencia_real": 1,
++      "score_riesgo": 0.7026,
++      "banda_riesgo": "Alto",
++      "clase": "no_asiste"
++    },
++    {
++      "cita_id": "demo-0045",
++      "edad": 30,
++      "genero": "F",
++      "dias_espera": 0,
++      "weekday": 1,
++      "dia_semana": "Martes",
++      "inasistencia_real": 0,
++      "score_riesgo": 0.1488,
++      "banda_riesgo": "Bajo",
++      "clase": "asiste"
++    },
++    {
++      "cita_id": "demo-0046",
++      "edad": 50,
++      "genero": "F",
++      "dias_espera": 6,
++      "weekday": 2,
++      "dia_semana": "Miércoles",
++      "inasistencia_real": 0,
++      "score_riesgo": 0.4619,
++      "banda_riesgo": "Medio",
++      "clase": "asiste"
++    },
++    {
++      "cita_id": "demo-0047",
++      "edad": 91,
++      "genero": "F",
++      "dias_espera": 28,
++      "weekday": 2,
++      "dia_semana": "Miércoles",
++      "inasistencia_real": 0,
++      "score_riesgo": 0.4591,
++      "banda_riesgo": "Medio",
++      "clase": "asiste"
++    },
++    {
++      "cita_id": "demo-0048",
++      "edad": 84,
++      "genero": "F",
++      "dias_espera": 0,
++      "weekday": 0,
++      "dia_semana": "Lunes",
++      "inasistencia_real": 0,
++      "score_riesgo": 0.0099,
++      "banda_riesgo": "Bajo",
++      "clase": "asiste"
++    },
++    {
++      "cita_id": "demo-0049",
++      "edad": 28,
++      "genero": "F",
++      "dias_espera": 0,
++      "weekday": 0,
++      "dia_semana": "Lunes",
++      "inasistencia_real": 0,
++      "score_riesgo": 0.1626,
++      "banda_riesgo": "Bajo",
++      "clase": "asiste"
++    },
++    {
++      "cita_id": "demo-0050",
++      "edad": 46,
++      "genero": "F",
++      "dias_espera": 2,
++      "weekday": 2,
++      "dia_semana": "Miércoles",
++      "inasistencia_real": 1,
++      "score_riesgo": 0.6477,
++      "banda_riesgo": "Alto",
++      "clase": "no_asiste"
++    },
++    {
++      "cita_id": "demo-0051",
++      "edad": 0,
++      "genero": "F",
++      "dias_espera": 11,
++      "weekday": 0,
++      "dia_semana": "Lunes",
++      "inasistencia_real": 0,
++      "score_riesgo": 0.575,
++      "banda_riesgo": "Alto",
++      "clase": "no_asiste"
++    },
++    {
++      "cita_id": "demo-0052",
++      "edad": 55,
++      "genero": "M",
++      "dias_espera": 14,
++      "weekday": 1,
++      "dia_semana": "Martes",
++      "inasistencia_real": 0,
++      "score_riesgo": 0.6442,
++      "banda_riesgo": "Alto",
++      "clase": "no_asiste"
++    },
++    {
++      "cita_id": "demo-0053",
++      "edad": 35,
++      "genero": "F",
++      "dias_espera": 0,
++      "weekday": 2,
++      "dia_semana": "Miércoles",
++      "inasistencia_real": 0,
++      "score_riesgo": 0.1062,
++      "banda_riesgo": "Bajo",
++      "clase": "asiste"
++    },
++    {
++      "cita_id": "demo-0054",
++      "edad": 29,
++      "genero": "F",
++      "dias_espera": 4,
++      "weekday": 0,
++      "dia_semana": "Lunes",
++      "inasistencia_real": 0,
++      "score_riesgo": 0.5747,
++      "banda_riesgo": "Alto",
++      "clase": "no_asiste"
++    },
++    {
++      "cita_id": "demo-0055",
++      "edad": 82,
++      "genero": "M",
++      "dias_espera": 5,
++      "weekday": 1,
++      "dia_semana": "Martes",
++      "inasistencia_real": 1,
++      "score_riesgo": 0.4502,
++      "banda_riesgo": "Medio",
++      "clase": "asiste"
++    },
++    {
++      "cita_id": "demo-0056",
++      "edad": 24,
++      "genero": "F",
++      "dias_espera": 0,
++      "weekday": 2,
++      "dia_semana": "Miércoles",
++      "inasistencia_real": 0,
++      "score_riesgo": 0.0281,
++      "banda_riesgo": "Bajo",
++      "clase": "asiste"
++    },
++    {
++      "cita_id": "demo-0057",
++      "edad": 15,
++      "genero": "M",
++      "dias_espera": 0,
++      "weekday": 4,
++      "dia_semana": "Viernes",
++      "inasistencia_real": 0,
++      "score_riesgo": 0.7003,
++      "banda_riesgo": "Alto",
++      "clase": "no_asiste"
++    },
++    {
++      "cita_id": "demo-0058",
++      "edad": 66,
++      "genero": "M",
++      "dias_espera": 0,
++      "weekday": 1,
++      "dia_semana": "Martes",
++      "inasistencia_real": 0,
++      "score_riesgo": 0.009,
++      "banda_riesgo": "Bajo",
++      "clase": "asiste"
++    },
++    {
++      "cita_id": "demo-0059",
++      "edad": 38,
++      "genero": "F",
++      "dias_espera": 20,
++      "weekday": 1,
++      "dia_semana": "Martes",
++      "inasistencia_real": 0,
++      "score_riesgo": 0.6572,
++      "banda_riesgo": "Alto",
++      "clase": "no_asiste"
++    },
++    {
++      "cita_id": "demo-0060",
++      "edad": 23,
++      "genero": "F",
++      "dias_espera": 1,
++      "weekday": 3,
++      "dia_semana": "Jueves",
++      "inasistencia_real": 0,
++      "score_riesgo": 0.5062,
++      "banda_riesgo": "Alto",
++      "clase": "no_asiste"
++    }
++  ]
++}
+diff --git a/src/App.tsx b/src/App.tsx
+index 7fcdb62..d93e7b4 100644
+--- a/src/App.tsx
++++ b/src/App.tsx
+@@ -11,6 +11,7 @@ import HomePageMedico from './Pages/Medicos/HomePage/HomePage.tsx';
+ import AgendaPageMedico from './Pages/Medicos/Agenda/AgendaPage.tsx';
+ import ResumenPageMedico from './Pages/Medicos/Resumen/ResumenPage.tsx';
+ import GestionCitasMedico from './Pages/Medicos/GestionCitas/GestionCitas.tsx';
++import RiesgoIAMedico from './Pages/Medicos/RiesgoIA/RiesgoIA.tsx';
+ 
+ {/* IMPORTACION VISTA RECEPCIONISTA */}
+ import HomePageRecepcionista from './Pages/Recepcionista/HomePage/HomePage.tsx';
+@@ -51,6 +52,7 @@ function App() {
+               <Route path="/agenda-page-medico" element={<AgendaPageMedico />} />
+               <Route path="/resumen-page-medico" element={<ResumenPageMedico />} />
+               <Route path="/gestion-citas-page-medico" element={<GestionCitasMedico />} />
++              <Route path="/riesgo-ia-page-medico" element={<RiesgoIAMedico />} />
+             </Route>
+ 
+             {/* VISTAS RECEPCIONISTA */}
+diff --git a/src/Components/Layouts/Navbar/navConfig.tsx b/src/Components/Layouts/Navbar/navConfig.tsx
+index 0df64bd..cb45bff 100644
+--- a/src/Components/Layouts/Navbar/navConfig.tsx
++++ b/src/Components/Layouts/Navbar/navConfig.tsx
+@@ -1,4 +1,4 @@
+-import { FaHome, FaCalendar, FaBook  } from 'react-icons/fa';
++import { FaHome, FaCalendar, FaBook, FaChartLine  } from 'react-icons/fa';
+ import { FaClipboardList, FaUsersGear , FaBoxArchive , FaClock, FaUsers  } from 'react-icons/fa6';
+ import type { IconType } from 'react-icons';
+ import type { UserRole } from '../../Routes/roles.ts';
+@@ -15,6 +15,7 @@ export const NAV_CONFIG: Record<UserRole, NavLinkConfig[]> = {
+         { to: '/agenda-page-medico', label: 'Agenda', icon: FaCalendar },
+         { to: '/resumen-page-medico', label: 'Resumen', icon: FaClipboardList },
+         { to: '/gestion-citas-page-medico', label: 'Gestion Citas', icon: FaBook },
++        { to: '/riesgo-ia-page-medico', label: 'Riesgo IA', icon: FaChartLine },
+     ],
+     administrador: [
+         { to: '/home-page-administrador', label: 'Home', icon: FaHome },
+diff --git a/src/Pages/Medicos/RiesgoIA/RiesgoIA.css b/src/Pages/Medicos/RiesgoIA/RiesgoIA.css
+new file mode 100644
+index 0000000..a253f50
+--- /dev/null
++++ b/src/Pages/Medicos/RiesgoIA/RiesgoIA.css
+@@ -0,0 +1,276 @@
++.ContenedorPrincipal-RiesgoIA{
++    width: 100%;
++    height: 100dvh;
++    box-sizing: border-box;
++    display: flex;
++    flex-direction: column;
++}
++
++.ContenedorTitulo-RiesgoIA{
++    width: 100%;
++    height: 15dvh;
++    display: flex;
++    align-items: center;
++    gap: 15px;
++    padding-left: 40px;
++    box-sizing: border-box;
++    color: #1E9CF1;
++}
++
++.Badge-Simulacion-RiesgoIA{
++    background-color: #FEF3C7;
++    color: #B45309;
++    border: 1px solid #FCD34D;
++    border-radius: 999px;
++    padding: 4px 12px;
++    font-size: 0.75rem;
++    font-weight: bold;
++    text-transform: uppercase;
++    letter-spacing: 0.5px;
++}
++
++.ContenedorContenido-RiesgoIA{
++    width: 100%;
++    height: 85dvh;
++    padding: 10px 50px 40px;
++    box-sizing: border-box;
++    overflow-y: auto;
++}
++
++.Meta-RiesgoIA{
++    margin: 0 0 20px;
++    color: #6B7280;
++    font-size: 0.9rem;
++}
++
++.Kpis-RiesgoIA{
++    display: grid;
++    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
++    gap: 20px;
++    margin-bottom: 25px;
++}
++
++.Kpi-RiesgoIA{
++    background-color: #F7F8F8;
++    border: 1px solid #E1EAEF;
++    border-radius: 12px;
++    padding: 18px 20px;
++    display: flex;
++    flex-direction: column;
++    gap: 6px;
++}
++
++.KpiValor-RiesgoIA{
++    font-size: 1.8rem;
++    font-weight: bold;
++    color: #1E9CF1;
++}
++
++.KpiEtiqueta-RiesgoIA,
++.Kpi-RiesgoIA .KpiEtiqueta-RiesgoIA{
++    color: #6B7280;
++    font-size: 0.9rem;
++}
++
++.Bandas-RiesgoIA{
++    display: flex;
++    flex-wrap: wrap;
++    gap: 15px;
++    margin-bottom: 25px;
++}
++
++.Chip-Banda-RiesgoIA{
++    display: flex;
++    align-items: center;
++    gap: 10px;
++    border-radius: 10px;
++    padding: 12px 18px;
++    border: 1px solid #E1EAEF;
++    background-color: #F7F8F8;
++}
++
++.Chip-Banda-RiesgoIA.Bajo{
++    border-color: #16A34A33;
++}
++
++.Chip-Banda-RiesgoIA.Medio{
++    border-color: #F59E0B33;
++}
++
++.Chip-Banda-RiesgoIA.Alto{
++    border-color: #DC262633;
++}
++
++.ChipCantidad-RiesgoIA{
++    font-size: 1.5rem;
++    font-weight: bold;
++    color: #333;
++}
++
++.ChipEtiqueta-RiesgoIA{
++    color: #6B7280;
++    font-size: 0.9rem;
++}
++
++.Filtros-RiesgoIA{
++    display: flex;
++    flex-wrap: wrap;
++    gap: 10px;
++    margin-bottom: 15px;
++}
++
++.BtnFiltro-RiesgoIA{
++    border: 1px solid #E1EAEF;
++    background-color: #FFFFFF;
++    color: #6B7280;
++    border-radius: 8px;
++    padding: 8px 16px;
++    font-size: 0.85rem;
++    font-weight: bold;
++    cursor: pointer;
++    transition: all 0.2s;
++}
++
++.BtnFiltro-RiesgoIA:hover{
++    background-color: #F7F8F8;
++}
++
++.BtnFiltro-RiesgoIA.Activo{
++    background-color: #1E9CF1;
++    border-color: #1E9CF1;
++    color: #FFFFFF;
++}
++
++.TablaWrapper-RiesgoIA{
++    width: 100%;
++    border: 1px solid #E1EAEF;
++    border-radius: 12px;
++    overflow: hidden;
++}
++
++.Tabla-RiesgoIA{
++    width: 100%;
++    border-collapse: collapse;
++    font-size: 0.9rem;
++}
++
++.Tabla-RiesgoIA thead{
++    background-color: #F7F8F8;
++}
++
++.Tabla-RiesgoIA th{
++    text-align: left;
++    padding: 12px 16px;
++    color: #6B7280;
++    font-size: 0.8rem;
++    text-transform: uppercase;
++    letter-spacing: 0.4px;
++}
++
++.Tabla-RiesgoIA td{
++    padding: 12px 16px;
++    color: #333;
++    border-top: 1px solid #EEF2F5;
++}
++
++.Tabla-RiesgoIA tbody tr:hover{
++    background-color: #FBFDFE;
++}
++
++.CeldaId-RiesgoIA{
++    color: #9F9F9F;
++    font-family: monospace;
++}
++
++.TablaVacia-RiesgoIA{
++    text-align: center;
++    color: #979797;
++}
++
++.EtiquetaReal-RiesgoIA{
++    display: inline-block;
++    border-radius: 6px;
++    padding: 2px 10px;
++    font-size: 0.8rem;
++    font-weight: bold;
++}
++
++.EtiquetaReal-RiesgoIA.Si{
++    background-color: #FEE2E2;
++    color: #B91C1C;
++}
++
++.EtiquetaReal-RiesgoIA.No{
++    background-color: #DCFCE7;
++    color: #15803D;
++}
++
++.BarraRiesgo-RiesgoIA{
++    position: relative;
++    width: 140px;
++    height: 20px;
++    background-color: #EEF2F5;
++    border-radius: 999px;
++    overflow: hidden;
++}
++
++.BarraRiesgoRelleno-RiesgoIA{
++    position: absolute;
++    inset: 0 auto 0 0;
++    height: 100%;
++}
++
++.BarraRiesgoRelleno-RiesgoIA.Bajo{
++    background-color: #16A34A;
++}
++
++.BarraRiesgoRelleno-RiesgoIA.Medio{
++    background-color: #F59E0B;
++}
++
++.BarraRiesgoRelleno-RiesgoIA.Alto{
++    background-color: #DC2626;
++}
++
++.BarraRiesgoValor-RiesgoIA{
++    position: relative;
++    z-index: 1;
++    display: block;
++    text-align: center;
++    line-height: 20px;
++    font-size: 0.75rem;
++    font-weight: bold;
++    color: #333;
++}
++
++.Pastilla-RiesgoIA{
++    display: inline-block;
++    border-radius: 999px;
++    padding: 3px 12px;
++    font-size: 0.8rem;
++    font-weight: bold;
++    color: #FFFFFF;
++}
++
++.Pastilla-RiesgoIA.Bajo{
++    background-color: #16A34A;
++}
++
++.Pastilla-RiesgoIA.Medio{
++    background-color: #F59E0B;
++}
++
++.Pastilla-RiesgoIA.Alto{
++    background-color: #DC2626;
++}
++
++.Estado-RiesgoIA{
++    margin: auto;
++    color: #6B7280;
++    font-size: 1rem;
++}
++
++.Estado-RiesgoIA.Error{
++    color: #DC2626;
++    font-weight: bold;
++}
+diff --git a/src/Pages/Medicos/RiesgoIA/RiesgoIA.tsx b/src/Pages/Medicos/RiesgoIA/RiesgoIA.tsx
+new file mode 100644
+index 0000000..d6a0ce5
+--- /dev/null
++++ b/src/Pages/Medicos/RiesgoIA/RiesgoIA.tsx
+@@ -0,0 +1,221 @@
++import { useEffect, useMemo, useState } from 'react';
++import './RiesgoIA.css';
++
++type Banda = 'Bajo' | 'Medio' | 'Alto';
++type FiltroBanda = 'Todas' | Banda;
++
++interface CitaDemo {
++    cita_id: string;
++    edad: number;
++    genero: string;
++    dias_espera: number;
++    weekday: number;
++    dia_semana: string;
++    inasistencia_real: number;
++    score_riesgo: number;
++    banda_riesgo: Banda;
++    clase: 'asiste' | 'no_asiste';
++}
++
++interface ResumenDemo {
++    n_citas: number;
++    tasa_inasistencia_real: number;
++    tasa_inasistencia_predicha: number;
++    auc_muestra: number | null;
++    por_banda: Record<Banda, number>;
++    por_clase: Record<string, number>;
++}
++
++interface DemoCitas {
++    generado_en: string;
++    simulacion: boolean;
++    modelo: { version: string; auc_test: number; sensibilidad: number; especificidad: number };
++    umbrales_banda: Record<Banda, string>;
++    resumen: ResumenDemo;
++    citas: CitaDemo[];
++}
++
++const BANDAS: Banda[] = ['Bajo', 'Medio', 'Alto'];
++const FILTROS: FiltroBanda[] = ['Todas', ...BANDAS];
++
++const formatearPct = (valor: number) => `${(valor * 100).toFixed(1)}%`;
++
++function RiesgoIAMedico() {
++    const [data, setData] = useState<DemoCitas | null>(null);
++    const [error, setError] = useState<string | null>(null);
++    const [cargando, setCargando] = useState(true);
++    const [filtro, setFiltro] = useState<FiltroBanda>('Todas');
++
++    useEffect(() => {
++        let activo = true;
++        fetch(`${import.meta.env.BASE_URL}demo_citas.json`)
++            .then((res) => {
++                if (!res.ok) throw new Error(`No se pudo cargar demo_citas.json (${res.status})`);
++                return res.json();
++            })
++            .then((json: DemoCitas) => {
++                if (activo) {
++                    setData(json);
++                    setError(null);
++                }
++            })
++            .catch((err: unknown) => {
++                if (activo) setError(err instanceof Error ? err.message : 'Error desconocido');
++            })
++            .finally(() => {
++                if (activo) setCargando(false);
++            });
++        return () => {
++            activo = false;
++        };
++    }, []);
++
++    const citasFiltradas = useMemo(() => {
++        const citas = data?.citas ?? [];
++        return filtro === 'Todas' ? citas : citas.filter((c) => c.banda_riesgo === filtro);
++    }, [data, filtro]);
++
++    if (cargando) {
++        return (
++            <div className="ContenedorPrincipal-RiesgoIA">
++                <p className="Estado-RiesgoIA">Cargando datos de demostración...</p>
++            </div>
++        );
++    }
++
++    if (error || !data) {
++        return (
++            <div className="ContenedorPrincipal-RiesgoIA">
++                <p className="Estado-RiesgoIA Error">{error ?? 'Sin datos de demostración'}</p>
++            </div>
++        );
++    }
++
++    const { resumen, modelo } = data;
++
++    return (
++        <div className="ContenedorPrincipal-RiesgoIA">
++            <div className="ContenedorTitulo-RiesgoIA">
++                <h1>Riesgo de Inasistencia (IA)</h1>
++                <span className="Badge-Simulacion-RiesgoIA">Simulación</span>
++            </div>
++
++            <div className="ContenedorContenido-RiesgoIA">
++                <p className="Meta-RiesgoIA">
++                    Modelo v{modelo.version} · AUC test {modelo.auc_test} · muestra de {resumen.n_citas}{' '}
++                    citas del dataset Kaggle (artefacto offline: no pasa por OMRO ni por .NET)
++                </p>
++
++                <div className="Kpis-RiesgoIA">
++                    <div className="Kpi-RiesgoIA">
++                        <span className="KpiValor-RiesgoIA">{resumen.n_citas}</span>
++                        <span className="KpiEtiqueta-RiesgoIA">Citas evaluadas</span>
++                    </div>
++                    <div className="Kpi-RiesgoIA">
++                        <span className="KpiValor-RiesgoIA">
++                            {formatearPct(resumen.tasa_inasistencia_real)}
++                        </span>
++                        <span className="KpiEtiqueta-RiesgoIA">Inasistencia real</span>
++                    </div>
++                    <div className="Kpi-RiesgoIA">
++                        <span className="KpiValor-RiesgoIA">
++                            {formatearPct(resumen.tasa_inasistencia_predicha)}
++                        </span>
++                        <span className="KpiDescripcion-RiesgoIA">Riesgo medio predicho</span>
++                    </div>
++                    <div className="Kpi-RiesgoIA">
++                        <span className="KpiValor-RiesgoIA">
++                            {resumen.auc_muestra !== null ? resumen.auc_muestra : '—'}
++                        </span>
++                        <span className="KpiDescripcion-RiesgoIA">AUC en la muestra</span>
++                    </div>
++                </div>
++
++                <div className="Bandas-RiesgoIA">
++                    {BANDAS.map((banda) => (
++                        <div key={banda} className={`Chip-Banda-RiesgoIA ${banda}`}>
++                            <span className="ChipCantidad-RiesgoIA">{resumen.por_banda[banda]}</span>
++                            <span className="ChipEtiqueta-RiesgoIA">Riesgo {banda}</span>
++                        </div>
++                    ))}
++                </div>
++
++                <div className="Filtros-RiesgoIA">
++                    {FILTROS.map((opcion) => (
++                        <button
++                            key={opcion}
++                            type="button"
++                            className={`BtnFiltro-RiesgoIA ${filtro === opcion ? 'Activo' : ''}`}
++                            onClick={() => setFiltro(opcion)}
++                        >
++                            {opcion}
++                        </button>
++                    ))}
++                </div>
++
++                <div className="TablaWrapper-RiesgoIA">
++                    <table className="Tabla-RiesgoIA">
++                        <thead>
++                            <tr>
++                                <th>Cita</th>
++                                <th>Edad</th>
++                                <th>Género</th>
++                                <th>Días de espera</th>
++                                <th>Día</th>
++                                <th>Inasistió</th>
++                                <th>Riesgo predicho</th>
++                                <th>Banda</th>
++                            </tr>
++                        </thead>
++                        <tbody>
++                            {citasFiltradas.length === 0 ? (
++                                <tr>
++                                    <td colSpan={8} className="TablaVacia-RiesgoIA">
++                                        No hay citas en esta banda
++                                    </td>
++                                </tr>
++                            ) : (
++                                citasFiltradas.map((cita) => (
++                                    <tr key={cita.cita_id}>
++                                        <td className="CeldaId-RiesgoIA">{cita.cita_id}</td>
++                                        <td>{cita.edad}</td>
++                                        <td>{cita.genero}</td>
++                                        <td>{cita.dias_espera}</td>
++                                        <td>{cita.dia_semana}</td>
++                                        <td>
++                                            <span
++                                                className={`EtiquetaReal-RiesgoIA ${
++                                                    cita.inasistencia_real ? 'Si' : 'No'
++                                                }`}
++                                            >
++                                                {cita.inasistencia_real ? 'Sí' : 'No'}
++                                            </span>
++                                        </td>
++                                        <td>
++                                            <div className="BarraRiesgo-RiesgoIA">
++                                                <div
++                                                    className={`BarraRiesgoRelleno-RiesgoIA ${cita.banda_riesgo}`}
++                                                    style={{ width: `${Math.round(cita.score_riesgo * 100)}%` }}
++                                                />
++                                                <span className="BarraRiesgoValor-RiesgoIA">
++                                                    {formatearPct(cita.score_riesgo)}
++                                                </span>
++                                            </div>
++                                        </td>
++                                        <td>
++                                            <span className={`Pastilla-RiesgoIA ${cita.banda_riesgo}`}>
++                                                {cita.banda_riesgo}
++                                            </span>
++                                        </td>
++                                    </tr>
++                                ))
++                            )}
++                        </tbody>
++                    </table>
++                </div>
++            </div>
++        </div>
++    );
++}
++
++export default RiesgoIAMedico;

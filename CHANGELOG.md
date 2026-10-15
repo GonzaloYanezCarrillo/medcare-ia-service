@@ -4,6 +4,13 @@ Todas las modificaciones de este repositorio se documentan aquí, siguiendo [Kee
 
 El servicio implementa el contrato [`ia-api.yaml`](https://github.com/pabloordenes/medcare-contracts) (owner: Dev C).
 
+## [0.7.4] — Herramientas de demo (2026-10-15)
+
+### Demo — Riesgo de inasistencia (Kaggle → frontend)
+- **`scripts/generar_demo_citas.py`**: genera un artefacto JSON de demostración desde una **muestra estratificada** del dataset Kaggle puntuada con el artefacto real (`models/model.joblib`), reutilizando la lógica de inferencia de `PredictService` (mismas features, `defaults` y umbrales de banda `<0.25` / `≤0.50` / `>0.50`). Exporta `docs/demo/demo_citas.json` con `score_riesgo`, `banda_riesgo`, `clase` y la etiqueta real `inasistencia_real` por cita, más un `resumen` agregado (tasa real vs. predicha, AUC de la muestra, conteos por banda). Marcado `"simulacion": true`.
+- **`docs/demo_frontend/`**: handoff para el frontend (Track A) — `RiesgoIA.tsx` + `RiesgoIA.css` (vista del **rol médico**: KPIs, resumen por banda, filtro y tabla con `%` de riesgo por color), `demo_citas.json`, `demo_riesgo_ia.patch` (aplicable con `git apply`) e `INTEGRACION.md` con los pasos de integración (ruta `/riesgo-ia-page-medico` + ítem de navbar).
+- **Alcance**: herramienta **offline**; no se conecta a OMRO, .NET ni Supabase y **no cambia el contrato** `ia-api.yaml` ni el runtime del servicio (`app_version` se mantiene en 1.4.0).
+
 ## [0.7.3] — Sprint 4 · C4-1 Feedback y retrain (HU-IA-02) (2026-10-06)
 
 ### C4-1 — Feedback de asistencia real y reentrenamiento con gate
