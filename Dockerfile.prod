@@ -14,6 +14,10 @@ COPY requirements.txt .
 RUN pip install --upgrade pip && pip install -r requirements.txt
 
 RUN groupadd --system app && useradd --system --gid app --create-home app
+
+# Directorio de feedback escribible por `app` (data/ se excluye del build en .dockerignore).
+RUN mkdir -p /app/data/feedback && chown -R app:app /app/data
+
 USER app
 
 COPY --chown=app:app app ./app

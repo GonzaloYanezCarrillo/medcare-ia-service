@@ -15,6 +15,10 @@ RUN pip install --upgrade pip && pip install -r requirements.txt
 
 # Usuario sin privilegios: si el proceso se compromete, no tiene root en el contenedor.
 RUN groupadd --system app && useradd --system --gid app --create-home app
+
+# Directorio de feedback escribible por `app` (data/ se excluye del build en .dockerignore).
+RUN mkdir -p /app/data/feedback && chown -R app:app /app/data
+
 USER app
 
 # Código de la aplicación.

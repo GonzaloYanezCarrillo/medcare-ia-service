@@ -4,6 +4,17 @@ Todas las modificaciones de este repositorio se documentan aquí, siguiendo [Kee
 
 El servicio implementa el contrato [`ia-api.yaml`](https://github.com/pabloordenes/medcare-contracts) (owner: Dev C).
 
+## [0.7.5] — Correcciones de integración (2026-10-20)
+
+### Auth — Esquema `bearerAuth` en el OpenAPI
+- **`app/services/auth.py`**: `require_m2m` usa `HTTPBearer(scheme_name="bearerAuth", bearerFormat="JWT", auto_error=False)` en lugar de leer el header manualmente. El OpenAPI emitido declara `components.securitySchemes.bearerAuth` y aplica `security` a `/predict`, `/nlp/*` y `/feedback/asistencia`; `/health` sigue público. Swagger UI (`/docs`) muestra el botón **Authorize**. Se conserva el 401 propio cuando falta el header (el default de `HTTPBearer` sería 403) y el 403 por rol incorrecto.
+
+### Docker — Feedback escribible en la imagen
+- **`Dockerfile` / `Dockerfile.prod`**: se crea `/app/data/feedback` con propietario `app` antes de cambiar a `USER app`. Corrige el `500` de `POST /feedback/asistencia` cuando el usuario no-root no podía crear `data/` (excluido del build por `.dockerignore`).
+
+### Validación
+- `pytest`: **111 passed**; `ruff check`: limpio. OpenAPI verificado: `bearerAuth` presente y `security` solo en rutas protegidas.
+
 ## [0.7.4] — Herramientas de demo (2026-10-15)
 
 ### Demo — Riesgo de inasistencia (Kaggle → frontend)
