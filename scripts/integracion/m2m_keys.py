@@ -67,7 +67,7 @@ def public_pem_path() -> str:
     return _PUBLIC_PATH
 
 
-def make_token(*, role: str = "service-ia", exp_minutes: int = 30) -> str:
+def make_token(*, role: str = "service-ia", exp_minutes: int = 5) -> str:
     """Emite un JWT RS256 como lo haría Supabase Auth para el servicio indicado."""
     private_pem, _ = ensure_keypair()
     now = datetime.datetime.now(datetime.UTC)
