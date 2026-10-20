@@ -23,7 +23,8 @@ from functools import lru_cache
 from typing import Any
 
 import jwt
-from fastapi import Depends, Header, HTTPException, status
+from fastapi import Depends, HTTPException, status
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jwt import PyJWKClient
 
 from app.config import Settings, get_settings
@@ -32,8 +33,16 @@ logger = logging.getLogger(__name__)
 
 # Solo RS256 (contrato auth.yaml, algoritmo 9). Rechazar algoritmos débiles (HS*/none).
 _ALLOWED_ALGORITHMS = ["RS256"]
-_BEARER_PREFIX = "Bearer "
 _WWW_AUTHENTICATE = {"WWW-Authenticate": "Bearer"}
+
+# Esquema de seguridad declarado en el OpenAPI (ia-api.yaml → components.securitySchemes).
+# `auto_error=False` para devolver nuestro 401 propio (el default de HTTPBearer es 403).
+_bearer_scheme = HTTPBearer(
+    scheme_name="bearerAuth",
+    bearerFormat="JWT",
+    auto_error=False,
+    description="JWT M2M (Machine-to-Machine) para comunicación segura con .NET",
+)
 
 
 class JwtVerifier:
@@ -104,23 +113,20 @@ def get_auth_verifier() -> JwtVerifier:
     return JwtVerifier(get_settings())
 
 
-def _extract_token(authorization: str | None) -> str:
-    """Valida el header y extrae el token JWT; sin header/vacío → 401."""
-    if not authorization or not authorization.startswith(_BEARER_PREFIX):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Encabezado `Authorization: Bearer <JWT>` requerido.",
-            headers=_WWW_AUTHENTICATE,
-        )
-    return authorization[len(_BEARER_PREFIX) :].strip()
-
-
 def require_m2m(
-    authorization: str | None = Header(default=None),
+    credentials: HTTPAuthorizationCredentials | None = Depends(_bearer_scheme),
     verifier: JwtVerifier = Depends(get_auth_verifier),
 ) -> dict[str, Any]:
     """Dependencia FastAPI: autentica y autoriza llamadas machine-to-machine.
 
     Se inyecta en las rutas protegidas (x-roles: [service-ia] en ia-api.yaml).
+    Al depender de `HTTPBearer`, FastAPI declara `bearerAuth` en el OpenAPI y
+    Swagger UI muestra el botón `Authorize`.
     """
-    return verifier.verify(_extract_token(authorization))
+    if credentials is None or not credentials.credentials.strip():
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Encabezado `Authorization: Bearer <JWT>` requerido.",
+            headers=_WWW_AUTHENTICATE,
+        )
+    return verifier.verify(credentials.credentials)
