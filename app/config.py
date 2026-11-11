@@ -47,7 +47,7 @@ class Settings(BaseSettings):
     # En dev/test se inyecta JWT_PUBLIC_KEY_PEM para tokens autocontenidos (sin Supabase).
     jwt_jwks_url: str | None = None
     jwt_public_key_pem: str | None = None
-    jwt_issuer: str = "https://<project-ref>.supabase.co/auth/v1"
+    jwt_issuer: str = "https://weqohesdsgxepjilsgae.supabase.co/auth/v1"
     jwt_audience: str = "authenticated"
     jwt_required_role: str = "service-ia"
 
