@@ -24,7 +24,7 @@ import json
 import sys
 import warnings
 from collections import Counter
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 import joblib
@@ -43,11 +43,10 @@ warnings.filterwarnings(
     category=UserWarning,
 )
 
-from sklearn.metrics import roc_auc_score  # noqa: E402
-
 from app.config import get_settings  # noqa: E402
 from app.services.predict_service import _score_to_banda, _score_to_clase  # noqa: E402
 from app.training.etl import load_cleaned  # noqa: E402
+from sklearn.metrics import roc_auc_score  # noqa: E402
 
 DEFAULT_OUT = PROJECT_ROOT / "docs" / "demo" / "demo_citas.json"
 WEEKDAY_LABELS = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"]
@@ -130,7 +129,7 @@ def build_payload(artifact: dict, sample: pd.DataFrame, scores: np.ndarray) -> d
 
     metrics = artifact.get("metrics", {})
     return {
-        "generado_en": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "generado_en": datetime.now(UTC).isoformat(timespec="seconds"),
         "simulacion": True,
         "fuente": {
             "dataset": Path(get_settings().dataset_path).name,
