@@ -5,8 +5,10 @@ Coherente con `contracts/ia-api.yaml`.
 """
 
 from functools import lru_cache
+from pathlib import Path
 
-from pydantic import field_validator
+from cryptography.hazmat.primitives import serialization
+from pydantic import field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -45,8 +47,11 @@ class Settings(BaseSettings):
     # El contrato auth.yaml define: JWT RS256 emitido por Supabase Auth.
     # En producción se resuelve la clave pública vía JWKS_URL (well-known de Supabase).
     # En dev/test se inyecta JWT_PUBLIC_KEY_PEM para tokens autocontenidos (sin Supabase).
+    # Alternativa robusta (Render): JWT_PUBLIC_KEY_PATH al Secret File montado en
+    # /etc/secrets/ — los env vars de campo único colapsan los PEM multilínea.
     jwt_jwks_url: str | None = None
     jwt_public_key_pem: str | None = None
+    jwt_public_key_path: str | None = None
     jwt_issuer: str = "https://weqohesdsgxepjilsgae.supabase.co/auth/v1"
     jwt_audience: str = "authenticated"
     jwt_required_role: str = "service-ia"
@@ -58,6 +63,35 @@ class Settings(BaseSettings):
         if value and not value.startswith("/"):
             value = f"/{value}"
         return value.rstrip("/")
+
+    @model_validator(mode="after")
+    def _load_pem_from_path(self) -> "Settings":
+        """Puebla `jwt_public_key_pem` desde `jwt_public_key_path`.
+
+        Los paneles de env vars (p.ej. Render) suelen colapsar los saltos de línea
+        de un PEM multilínea pegado a mano: la firma deja de validar y toda llamada
+        regresa 401. Como Secret File (montado en /etc/secrets/) el contenido llega
+        byte-exacto. Fail-fast: si la ruta está definida pero el archivo falta o el
+        PEM es inválido, el arranque falla con error claro en los logs en vez de
+        rechazar tokens silenciosamente en cada request.
+        """
+        if self.jwt_public_key_path:
+            path = Path(self.jwt_public_key_path)
+            if not path.is_file():
+                raise ValueError(
+                    f"JWT_PUBLIC_KEY_PATH={path}: archivo inexistente. "
+                    "¿Está montado el Secret File en /etc/secrets/?"
+                )
+            pem = path.read_text(encoding="utf-8")
+            try:
+                serialization.load_pem_public_key(pem.encode())
+            except ValueError as exc:
+                raise ValueError(
+                    f"JWT_PUBLIC_KEY_PATH={path}: PEM inválido o truncado "
+                    f"(¿se perdieron los saltos de línea?): {exc}"
+                ) from exc
+            self.jwt_public_key_pem = pem
+        return self
 
     @property
     def is_production(self) -> bool:
