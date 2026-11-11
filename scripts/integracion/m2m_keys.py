@@ -20,7 +20,7 @@ _KEYS_DIR = os.path.join(os.path.dirname(__file__), ".m2m")
 _PRIVATE_PATH = os.path.join(_KEYS_DIR, "private.pem")
 _PUBLIC_PATH = os.path.join(_KEYS_DIR, "public.pem")
 
-ISSUER = os.environ.get("JWT_ISSUER", "https://<project-ref>.supabase.co/auth/v1")
+ISSUER = os.environ.get("JWT_ISSUER", "https://weqohesdsgxepjilsgae.supabase.co/auth/v1")
 AUDIENCE = os.environ.get("JWT_AUDIENCE", "authenticated")
 
 
